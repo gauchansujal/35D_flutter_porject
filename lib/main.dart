@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screen/dashboard_screen.dart';
 import 'package:flutter_application_1/screen/login_screen.dart';
-// import 'package:flutter_application_1/screen/onboarding_screen.dart';
+import 'package:flutter_application_1/screen/onboarding_screen.dart';
 import 'package:flutter_application_1/screen/signup_screen.dart';
 import 'package:flutter_application_1/screen/splash_screen.dart';
 
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       home: SplashScreen(),
       routes: {
         '/login': (_) => LoginScreen(),
-        // '/onboarding': (_) => OnboardingScreen(),
+        '/onboarding': (_) => OnboardingScreen(),
         '/signup': (_) => SignupScreen(),
         '/dashboard': (_) => DashboardScreen(),
       },
