@@ -11,9 +11,9 @@ class DashboardScreen extends StatelessWidget {
           title: Text('Dashboard'),
           bottom: TabBar(
             tabs: [
-              Tab(text: 'Home'),
-              Tab(text: 'Profile'),
-              Tab(text: 'Settings'),
+              Tab(icon: Icon(Icons.home), text: "Home"),
+              Tab(icon: Icon(Icons.person), text: 'Profile'),
+              Tab(icon: Icon(Icons.settings), text: 'Settings'),
             ],
           ),
         ),
