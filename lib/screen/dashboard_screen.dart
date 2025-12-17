@@ -149,9 +149,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           children: [
-            _iconBox(Icons.verified_user, Colors.indigo),
-            _iconBox(Icons.person, Colors.green),
             _iconBox(Icons.description, Colors.orange),
+            _iconBox(Icons.notifications_active, Colors.indigo),
             _iconBox(Icons.wallet, Colors.red),
           ],
         ),
