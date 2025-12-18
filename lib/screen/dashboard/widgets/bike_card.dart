@@ -33,7 +33,7 @@ class BikeCard extends StatelessWidget {
               ),
 
               /// CATEGORY
-              _chip("Sports", Colors.pink, left: 12),
+              _chip("Cruiser", Colors.pink, left: 12),
 
               /// STATUS
               _chip("Available", Colors.green, right: 12, icon: Icons.check),
@@ -47,12 +47,8 @@ class BikeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Yamaha R15 V4",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  "Royal Enfield Classic 350",
+                  style: TextStyle(color: Colors.white),
                 ),
 
                 const SizedBox(height: 12),

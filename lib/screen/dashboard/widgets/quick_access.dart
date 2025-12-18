@@ -14,13 +14,37 @@ class QuickAccess extends StatelessWidget {
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
-          crossAxisSpacing: 5, // horizontal spacing
-          mainAxisSpacing: 5, // vertical spacing
+          crossAxisSpacing: 5,
+          mainAxisSpacing: 5,
           physics: const NeverScrollableScrollPhysics(),
           children: [
-            IconBox(icon: Icons.description, color: Colors.orange),
-            IconBox(icon: Icons.notifications, color: Colors.indigo),
-            IconBox(icon: Icons.wallet, color: Colors.red),
+            GestureDetector(
+              onTap: () {
+                // action for Description button
+                print("Description tapped");
+              },
+              child: const IconBox(
+                icon: Icons.description,
+                color: Colors.orange,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                // action for Notifications button
+                print("Notifications tapped");
+              },
+              child: const IconBox(
+                icon: Icons.notifications,
+                color: Colors.indigo,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                // action for Wallet button
+                print("Wallet tapped");
+              },
+              child: const IconBox(icon: Icons.wallet, color: Colors.red),
+            ),
           ],
         ),
       ],
