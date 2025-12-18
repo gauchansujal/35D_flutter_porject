@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screen/dashboard_screen.dart';
+import 'package:flutter_application_1/screen/dashboard/dashboard_screen.dart';
 import 'package:flutter_application_1/screen/login_screen.dart';
 import 'package:flutter_application_1/screen/onboarding_screen.dart';
 import 'package:flutter_application_1/screen/signup_screen.dart';
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         '/login': (_) => LoginScreen(),
         '/onboarding': (_) => OnboardingScreen(),
         '/signup': (_) => SignupScreen(),
-        '/dashboard': (_) => DashboardScreen(),
+        '/dashboard/dashboardscreen': (_) => DashboardScreen(),
       },
     );
   }

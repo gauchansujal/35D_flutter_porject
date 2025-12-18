@@ -33,7 +33,10 @@ class LoginScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/dashboard');
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/dashboard/dashboardscreen',
+                );
               },
               child: Text('Login'),
             ),
