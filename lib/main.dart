@@ -4,6 +4,7 @@ import 'package:flutter_application_1/screen/login_screen.dart';
 import 'package:flutter_application_1/screen/onboarding_screen.dart';
 import 'package:flutter_application_1/screen/signup_screen.dart';
 import 'package:flutter_application_1/screen/splash_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,13 +13,12 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.blue),
       title: 'Bike-Rental',
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
       home: SplashScreen(),
       routes: {
         '/login': (_) => LoginScreen(),
