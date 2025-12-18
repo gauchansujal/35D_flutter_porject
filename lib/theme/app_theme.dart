@@ -6,7 +6,7 @@ class AppTheme {
     primarySwatch: Colors.blue,
     scaffoldBackgroundColor: Colors.white,
     textTheme: const TextTheme(
-      headlineLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      headlineLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 100),
       bodyMedium: TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
     ),
   );

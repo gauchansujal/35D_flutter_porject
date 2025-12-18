@@ -78,14 +78,15 @@ flutter:
 
  
   assets:
-    - lib/assets/fonts/
+    - assets/fonts/
+    - assets/images/royal_enfield.jpg
 
   fonts:
     - family: Lato
       fonts:
-        - asset: lib/assets/fonts/Lato-Black.ttf
+        - asset: assets/fonts/Lato-Black.ttf
           weight: 400
-        - asset: lib/assets/fonts/Lato-BlackItalic.ttf
+        - asset: assets/fonts/Lato-BlackItalic.ttf
           weight: 700
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
