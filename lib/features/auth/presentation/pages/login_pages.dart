@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class LoginPages extends StatelessWidget {
+  const LoginPages({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +33,7 @@ class LoginScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/dashboard/dashboardscreen',
-                );
+                Navigator.pushReplacementNamed(context, '/dashboard');
               },
               child: Text('Login'),
             ),

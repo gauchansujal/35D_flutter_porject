@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screen/dashboard/dashboard_screen.dart';
-import 'package:flutter_application_1/screen/login_screen.dart';
+import 'package:flutter_application_1/features/auth/presentation/pages/login_pages.dart';
 import 'package:flutter_application_1/screen/onboarding_screen.dart';
-import 'package:flutter_application_1/screen/signup_screen.dart';
+import 'package:flutter_application_1/features/auth/presentation/pages/signup_pages.dart';
 import 'package:flutter_application_1/screen/splash_screen.dart';
 import 'app/themes/app.dart';
 
@@ -21,10 +21,10 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       home: SplashScreen(),
       routes: {
-        '/login': (_) => LoginScreen(),
+        '/login': (_) => LoginPages(),
         '/onboarding': (_) => OnboardingScreen(),
-        '/signup': (_) => SignupScreen(),
-        '/dashboard/dashboardscreen': (_) => DashboardScreen(),
+        '/signup': (_) => SignupPages(),
+        '/dashboard': (_) => DashboardScreen(),
       },
     );
   }
