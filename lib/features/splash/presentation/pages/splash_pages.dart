@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 // ignore: use_key_in_widget_constructors
-class SplashScreen extends StatefulWidget {
+class SplashPages extends StatefulWidget {
   @override
   // ignore: library_private_types_in_public_api
-  _SplashScreenState createState() => _SplashScreenState();
+  _SplashPagesState createState() => _SplashPagesState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashPagesState extends State<SplashPages> {
   @override
   void initState() {
     super.initState();

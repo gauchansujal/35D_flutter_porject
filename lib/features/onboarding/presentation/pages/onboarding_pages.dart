@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 // ignore: use_key_in_widget_constructors
-class OnboardingScreen extends StatefulWidget {
+class OnboardingPages extends StatefulWidget {
   @override
   // ignore: library_private_types_in_public_api
-  _OnboardingScreenState createState() => _OnboardingScreenState();
+  _OnboardingPagesState createState() => _OnboardingPagesState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingPagesState extends State<OnboardingPages> {
   final PageController _controller = PageController();
   int _currentPage = 0;
 

@@ -73,17 +73,18 @@ class _BikeSearchState extends State<BikeSearch> {
             DropdownButton<String>(
               value: "All Types",
               dropdownColor: const Color(0xFF2A2E43),
-              items: ["All Types", "Mountain", "Road", "Electric"]
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  ["All Types", "Mountain", "Road", "Electric"]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
               onChanged: (_) {},
             ),
             const SizedBox(height: 12),
@@ -92,17 +93,18 @@ class _BikeSearchState extends State<BikeSearch> {
             DropdownButton<String>(
               value: "All Bikes",
               dropdownColor: const Color(0xFF2A2E43),
-              items: ["All Bikes", "Available", "Booked"]
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  ["All Bikes", "Available", "Booked"]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
               onChanged: (_) {},
             ),
             const SizedBox(height: 12),
@@ -114,17 +116,18 @@ class _BikeSearchState extends State<BikeSearch> {
             DropdownButton<String>(
               value: "All Prices",
               dropdownColor: const Color(0xFF2A2E43),
-              items: ["All Prices", "< \$20", "\$20 - \$50", "> \$50"]
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  ["All Prices", "< \$20", "\$20 - \$50", "> \$50"]
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      )
+                      .toList(),
               onChanged: (_) {},
             ),
           ],
