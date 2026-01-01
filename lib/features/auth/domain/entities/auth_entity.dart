@@ -1,31 +1,29 @@
-// import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 
-// class AuthEntity extends Equatable {
-//   final String? userId;
-//   final String fullName;
-//   final String email;
-//   final String phoneNumber;
-//   final String? batchId;
-//   final String username;
+// Must match the filename exactly
 
-//   final String? password;
-//   final BatchEntity? batch;
-//   final String? profilePicture;
+@HiveType(typeId: 0)
+class AuthEntity extends HiveObject {
+  @HiveField(0)
+  final String fullName;
 
-//   const AuthEntity({
-    
-//   this.userId, required this.fullName, required this.email, required this.phoneNumber, this.batchId, required this.username, this.password, this.batch, this.profilePicture})
+  @HiveField(1)
+  final String email;
 
+  @HiveField(2)
+  final String phoneNumber;
 
-//   @override
-//   List<Object?> get props => [
-//     userId,
-//     fullName,
-//     email,
-//     phoneNumber,
-//     batchId,
-//     username,
-//     password,
-//     batch,
-//   ];
-// }
+  @HiveField(3)
+  final String batch;
+
+  @HiveField(4)
+  final String password;
+
+  AuthEntity({
+    required this.fullName,
+    required this.email,
+    required this.phoneNumber,
+    required this.batch,
+    required this.password,
+  });
+}
