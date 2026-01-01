@@ -4,7 +4,7 @@ import 'package:flutter_application_1/screen/login_screen.dart';
 import 'package:flutter_application_1/screen/onboarding_screen.dart';
 import 'package:flutter_application_1/screen/signup_screen.dart';
 import 'package:flutter_application_1/screen/splash_screen.dart';
-import 'theme/app_theme.dart';
+import 'app/themes/app.dart';
 
 void main() {
   runApp(const MyApp());
