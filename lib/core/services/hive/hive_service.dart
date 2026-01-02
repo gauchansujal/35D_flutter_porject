@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+// Correct import
 import 'package:flutter_application_1/core/constants/hive_table_constatn.dart';
+// Removed duplicate wrong import: hive_table_constatn.dart
+
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
-import 'package:flutter_application_1/features/batch/data/models/batch_hive_model.dart';
+// import 'package:flutter_application_1/features/batch/data/models/batch_hive_model.dart'; // Commented out
+
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,51 +16,27 @@ final hiveServiceProvider = Provider<HiveService>((ref) {
 
 class HiveService {
   Future<void> init() async {
-    // Get app documents directory
     final directory = await getApplicationDocumentsDirectory();
-    final path = directory.path; // Hive will create subfolder automatically
+    final path = directory.path;
     Hive.init(path);
 
-    _registerAdapters(); // Fixed name
+    _registerAdapters();
 
     await openBoxes();
-    await insertDummyBatches(); // Fixed typo: Btches → Batches
+    // await insertDummyBatches(); // Commented out - batch related
   }
 
-  Future<void> insertDummyBatches() async {
-    final box = Hive.box<BatchHivemodel>(
-      HiveTableConstant.batchTable,
-    ); // Use correct constant
-
-    if (box.isNotEmpty) return;
-
-    final dummyBatches = [
-      BatchHivemodel(batchName: '35-A'),
-      BatchHivemodel(batchName: '35-B'),
-      BatchHivemodel(batchName: '35-C'),
-      BatchHivemodel(batchName: '35-D'),
-    ];
-
-    for (var batch in dummyBatches) {
-      await box.put(batch.batchId, batch);
-    }
-    // No need to close here — keep box open for app lifetime
-  }
+  // Future<void> insertDummyBatches() async { ... } // Fully commented out
 
   void _registerAdapters() {
-    // Register Batch adapter (uncomment when you generate the adapter)
-    // if (!Hive.isAdapterRegistered(HiveTableConstant.batchTypeId)) {
-    //   Hive.registerAdapter(BatchHiveModelAdapter()); // Fixed: BatchHivemode() → BatchHiveModelAdapter()
-    // }
-
-    // Register Auth adapter
     if (!Hive.isAdapterRegistered(HiveTableConstant.authTypeId)) {
       Hive.registerAdapter(AuthHiveModelAdapter());
     }
+    // Batch adapter registration removed since batch is not used now
   }
 
   Future<void> openBoxes() async {
-    await Hive.openBox<BatchHivemodel>(HiveTableConstant.batchTable);
+    // await Hive.openBox<BatchHiveModel>(HiveTableConstant.batchTable); // Commented out
     await Hive.openBox<AuthHiveModel>(HiveTableConstant.authTable);
   }
 
@@ -64,20 +44,15 @@ class HiveService {
     await Hive.close();
   }
 
-  // Batch operations
-  Box<BatchHivemodel> get _batchBox =>
-      Hive.box<BatchHivemodel>(HiveTableConstant.batchTable);
+  // // Batch operations - all commented out
+  // Box<BatchHiveModel> get _batchBox =>
+  //     Hive.box<BatchHiveModel>(HiveTableConstant.batchTable);
+  //
+  // Future<BatchHiveModel> createBatch(BatchHiveModel model) async { ... }
+  //
+  // Future<void> updateBatch(BatchHiveModel model) async { ... }
 
-  Future<BatchHivemodel> createBatch(BatchHivemodel model) async {
-    await _batchBox.put(model.batchId, model);
-    return model;
-  }
-
-  Future<void> updateBatch(BatchHivemodel model) async {
-    await _batchBox.put(model.batchId, model);
-  }
-
-  // Auth operations
+  // Auth operations - kept active
   Box<AuthHiveModel> get _authBox =>
       Hive.box<AuthHiveModel>(HiveTableConstant.authTable);
 
@@ -102,5 +77,12 @@ class HiveService {
 
   Future<void> registerUser(AuthHiveModel model) async {
     await _authBox.put(model.authId, model);
+  }
+
+  Future<bool> isEmailExists(String email) async {
+    final lowerEmail = email.toLowerCase();
+    return _authBox.values.any(
+      (user) => (user.email ?? '').toLowerCase() == lowerEmail,
+    );
   }
 }
