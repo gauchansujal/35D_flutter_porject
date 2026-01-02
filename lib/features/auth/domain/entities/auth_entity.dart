@@ -1,29 +1,39 @@
-import 'package:hive/hive.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_application_1/features/batch/domain/entites/batch_entity.dart';
 
-// Must match the filename exactly
-
-@HiveType(typeId: 0)
-class AuthEntity extends HiveObject {
-  @HiveField(0)
+class AuthEntity extends Equatable {
+  final String? userId;
   final String fullName;
-
-  @HiveField(1)
   final String email;
+  final String? phoneNumber;
+  final String batchId;
+  final String? password;
+  final String username;
+  final BatchEntity? batch;
+  final String? profilePicture;
 
-  @HiveField(2)
-  final String phoneNumber;
-
-  @HiveField(3)
-  final String batch;
-
-  @HiveField(4)
-  final String password;
-
-  AuthEntity({
+  const AuthEntity({
+    this.userId,
     required this.fullName,
     required this.email,
-    required this.phoneNumber,
-    required this.batch,
-    required this.password,
+    this.phoneNumber,
+    required this.batchId,
+    required this.username,
+    this.password,
+    this.batch,
+    this.profilePicture,
   });
+
+  @override
+  List<Object?> get props => [
+    userId,
+    fullName,
+    email,
+    phoneNumber,
+    batchId,
+    username,
+    password,
+    batch,
+    profilePicture,
+  ];
 }
