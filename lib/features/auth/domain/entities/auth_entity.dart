@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_application_1/features/batch/domain/entites/batch_entity.dart';
 
 class AuthEntity extends Equatable {
   final String? userId;
@@ -9,7 +8,6 @@ class AuthEntity extends Equatable {
   final String batchId;
   final String? password;
   final String username;
-  final BatchEntity? batch;
   final String? profilePicture;
 
   const AuthEntity({
@@ -20,7 +18,6 @@ class AuthEntity extends Equatable {
     required this.batchId,
     required this.username,
     this.password,
-    this.batch,
     this.profilePicture,
   });
 
@@ -33,7 +30,6 @@ class AuthEntity extends Equatable {
     batchId,
     username,
     password,
-    batch,
     profilePicture,
   ];
 }
