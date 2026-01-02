@@ -1,47 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginPages extends StatelessWidget {
+import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
+
+class LoginPages extends ConsumerWidget {
   const LoginPages({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    final authNotifier = ref.read(authViewModelProvider.notifier);
+
+    // Controllers
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+
+    // Listen for successful authentication → go to dashboard
+    ref.listen(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'Login',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
-              decoration: InputDecoration(
+              controller: emailController,
+              decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextField(
+              controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/dashboard');
-              },
-              child: Text('Login'),
+              onPressed:
+                  authState.status == AuthStatus.loading
+                      ? null
+                      : () {
+                        final email = emailController.text.trim();
+                        final password = passwordController.text;
+
+                        if (email.isEmpty || password.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please fill all fields'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Trigger login
+                        authNotifier.login(
+                          username: email, // You're using email as identifier
+                          password: password,
+                        );
+                      },
+              child:
+                  authState.status == AuthStatus.loading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : const Text('Login'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/signup');
               },
-              child: Text('Don\'t have an account? Signup'),
+              child: const Text('Don\'t have an account? Signup'),
             ),
           ],
         ),

@@ -1,9 +1,17 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_application_1/core/error/failures.dart';
+import 'package:flutter_application_1/features/auth/data/repositories/auth_repository.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
-import 'package:dartz/dartz.dart'; // Assuming you're using dartz for Either
+import 'package:dartz/dartz.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Assuming you're using dartz for Either
 // Adjust path as needed
+
+//provider
+final registerUsecaseProvider = Provider<RegisterUsecase>((ref) {
+  final authRepository = ref.read(authRepositoryProvider);
+  return RegisterUsecase(authRepository: authRepository);
+});
 
 class RegisterUsecaseParams extends Equatable {
   final String fullName;

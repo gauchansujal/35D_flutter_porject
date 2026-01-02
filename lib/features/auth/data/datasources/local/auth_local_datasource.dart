@@ -26,20 +26,17 @@ class AuthLocalDatasource implements IAuthDatasource {
   }
 
   @override
-  Future<bool> logout(String authId) async {
-    // ← Added authId parameter
-    await _hiveService.logoutUser(authId);
-    return true;
+  Future<bool> logout() async {
+    return true; // Temporarily return true - no current user tracking yet
   }
 
   @override
-  Future<AuthHiveModel?> getCurrentUser(String authId) async {
-    // ← Added authId
-    return _hiveService.getCurrentUser(authId);
+  Future<AuthHiveModel?> getCurrentUser() async {
+    return null; // Temporarily return null - no current user tracking yet
   }
 
   @override
-  Future<bool> idEmailExists(String email) async {
-    return await _hiveService.idEmailExists(email);
+  Future<bool> isEmailExists(String email) async {
+    return await _hiveService.isEmailExists(email);
   }
 }
