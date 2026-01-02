@@ -1,7 +1,14 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  registered,
+  error,
+}
 
 class AuthState extends Equatable {
   final AuthStatus status;
@@ -13,7 +20,11 @@ class AuthState extends Equatable {
     this.authEntity,
     this.errorMessage,
   });
-  //copywith
+
+  // Factory for initial state
+  factory AuthState.initial() => const AuthState();
+
+  // copyWith method
   AuthState copyWith({
     AuthStatus? status,
     AuthEntity? authEntity,
@@ -27,5 +38,8 @@ class AuthState extends Equatable {
   }
 
   @override
-  List<Object?> get props => throw UnimplementedError();
+  List<Object?> get props => [status, authEntity, errorMessage];
+
+  @override
+  bool get stringify => true;
 }

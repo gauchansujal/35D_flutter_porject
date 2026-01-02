@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// Correct imports for your project structure
+import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 
 class LoginPages extends ConsumerWidget {
@@ -12,13 +13,14 @@ class LoginPages extends ConsumerWidget {
     final authState = ref.watch(authViewModelProvider);
     final authNotifier = ref.read(authViewModelProvider.notifier);
 
-    // Controllers
+    // Text controllers
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    // Listen for successful authentication → go to dashboard
-    ref.listen(authViewModelProvider, (previous, next) {
+    // Listen to auth state changes
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
+        // Only navigate on successful login
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (next.status == AuthStatus.error && next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -43,6 +45,7 @@ class LoginPages extends ConsumerWidget {
             const SizedBox(height: 20),
             TextField(
               controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
@@ -75,9 +78,9 @@ class LoginPages extends ConsumerWidget {
                           return;
                         }
 
-                        // Trigger login
+                        // Call login from ViewModel
                         authNotifier.login(
-                          username: email, // You're using email as identifier
+                          username: email, // Using email as username
                           password: password,
                         );
                       },
