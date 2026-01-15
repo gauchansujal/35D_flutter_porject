@@ -1,6 +1,6 @@
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
 
-abstract interface class IAuthDatasource {
+abstract interface class IAuthLocalDatasource {
   Future<bool> register(AuthHiveModel model);
   Future<AuthHiveModel?> login(String email, String password);
   Future<AuthHiveModel?> getCurrentUser();

@@ -8,7 +8,7 @@ final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
   return AuthLocalDatasource(hiveService: hiveService);
 });
 
-class AuthLocalDatasource implements IAuthDatasource {
+class AuthLocalDatasource implements IAuthLocalDatasource {
   final HiveService _hiveService;
 
   AuthLocalDatasource({required HiveService hiveService})
@@ -27,12 +27,13 @@ class AuthLocalDatasource implements IAuthDatasource {
 
   @override
   Future<bool> logout() async {
-    return true; // Temporarily return true - no current user tracking yet
+    await _hiveService.logoutUser(); // Now correctly called
+    return true;
   }
 
   @override
   Future<AuthHiveModel?> getCurrentUser() async {
-    return null; // Temporarily return null - no current user tracking yet
+    return await _hiveService.getCurrentUser(); // Now correctly called
   }
 
   @override

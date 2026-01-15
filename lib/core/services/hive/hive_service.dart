@@ -96,4 +96,38 @@ class HiveService {
       (user) => (user.email ?? '').toLowerCase() == lowerEmail,
     );
   }
+
+  // ========== GET USER BY ID ==========
+  Future<AuthHiveModel?> getUserById(String authId) async {
+    return _authBox.get(authId);
+  }
+
+  // ========== GET USER BY EMAIL ==========
+  Future<AuthHiveModel?> getUserByEmail(String email) async {
+    final lowerEmail = email.toLowerCase();
+
+    try {
+      return _authBox.values.firstWhere(
+        (user) => (user.email).toLowerCase() == lowerEmail,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ========== UPDATE USER ==========
+  Future<void> updateUser(AuthHiveModel user) async {
+    await _authBox.put(user.authId, user);
+  }
+
+  // ========== DELETE USER ==========
+  Future<void> deleteUser(String authId) async {
+    await _authBox.delete(authId);
+
+    // If deleted user is logged in → logout
+    final currentUserId = _settingsBox.get(_currentUserIdKey);
+    if (currentUserId == authId) {
+      await logoutUser();
+    }
+  }
 }
