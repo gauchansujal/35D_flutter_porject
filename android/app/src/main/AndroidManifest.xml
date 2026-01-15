@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- ADD THIS LINE TO DISABLE IMPELLER ON EMULATOR -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
     <application
         android:label="flutter_application_1"
         android:name="${applicationName}"
