@@ -1,0 +1,32 @@
+import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_application_1/core/error/failure.dart';
+import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
+import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
+
+abstract class UsecaseWithParams<Type, Params> {
+  Future<Either<Failure, Type>> call(Params params);
+}
+
+abstract class UsecaseWithoutParams<Type> {
+  Future<Either<Failure, Type>> call();
+}
+
+class LoginUsecase implements UsecaseWithParams<bool, LoginUsecaseParams> {
+  final IAuthRepository _authRepository;
+
+  const LoginUsecase({required IAuthRepository authRepository})
+      : _authRepository = authRepository;
+
+  @override
+  Future<Either<Failure, bool>> call(LoginUsecaseParams params) async {
+    final entity = AuthEntity(
+      username: params.identifier.contains('@') ? null : params.identifier,
+      email: params.identifier.contains('@') ? params.identifier : null,
+      password: params.password,
+      // Other fields like fullName, phoneNumber, batchId are not needed for login
+    );
+
+    return await _authRepository.login(entity);
+  }
+}

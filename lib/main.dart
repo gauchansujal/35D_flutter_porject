@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
+import 'package:flutter_application_1/shared_perf/shared_perf.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/themes/app.dart';
 
@@ -38,8 +41,20 @@ void main() async {
     'app_settings',
   ); // For current_user_id, seenOnboarding, etc.
 
+  //shared preferances to object
+  // shared pref = async
+  //provider = sync
+
+  //shared prefs
+  final SharedPref = await SharedPreferences.getInstance();
+
   // Run the app with Riverpod ProviderScope
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(SharedPref)],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -51,7 +66,7 @@ class MyApp extends StatelessWidget {
       title: 'Bike-Rental',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: SplashPages(),
+      home: const SplashPage(),
       routes: {
         '/login': (_) => LoginPages(),
         '/onboarding': (_) => OnboardingPages(),

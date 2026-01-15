@@ -34,6 +34,7 @@ class UserSessionService {
     required String fullName,
     required String username,
     String? phoneNumber,
+    String? password,
     String? batchId,
     String? profilePicture,
   }) async {

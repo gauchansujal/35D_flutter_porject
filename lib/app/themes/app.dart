@@ -10,4 +10,6 @@ class AppTheme {
       bodyMedium: TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
     ),
   );
+
+  static ThemeData? get darkTheme => null;
 }
