@@ -150,7 +150,7 @@ class _AuthInterceptor extends Interceptor {
   ) async {
     // Skip auth for public endpoints
     final publicEndpoints = [
-      ApiEndpoints.batches,
+      // ApiEndpoints.batches,
       ApiEndpoints.categories,
       ApiEndpoints.studentLogin,
     ];

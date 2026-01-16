@@ -1,6 +1,7 @@
 // File: lib/features/auth/data/models/auth_hive_model.dart
 
 import 'package:flutter_application_1/core/constants/hive_table_constatn.dart';
+import 'package:flutter_application_1/features/auth/data/models/auth_api_model.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
@@ -21,11 +22,11 @@ class AuthHiveModel extends HiveObject {
   @HiveField(3)
   final String? phoneNumber;
 
-  @HiveField(4)
-  final String? batchId;
+  // @HiveField(4)
+  // final String? batchId;
 
-  @HiveField(5)
-  final String userName;
+  // @HiveField(5)
+  // final String userName;
 
   @HiveField(6)
   final String? password; // Keep nullable — cleared on logout if needed
@@ -38,8 +39,8 @@ class AuthHiveModel extends HiveObject {
     required this.fullName,
     required this.email,
     this.phoneNumber,
-    this.batchId,
-    required this.userName,
+    // this.batchId,
+    // required this.userName,
     this.password,
     this.profilePicture,
   }) : authId = authId ?? const Uuid().v4();
@@ -51,8 +52,8 @@ class AuthHiveModel extends HiveObject {
       fullName: entity.fullName ?? '',
       email: entity.email ?? '',
       phoneNumber: entity.phoneNumber,
-      batchId: entity.batchId,
-      userName: entity.username ?? '',
+      // batchId: entity.batchId,
+      // userName: entity.username ?? '',
       password: entity.password,
       profilePicture: entity.profilePicture,
     );
@@ -66,10 +67,10 @@ class AuthHiveModel extends HiveObject {
       email: email,
       phoneNumber: phoneNumber,
       // batchId: batchId,
-      username: userName,
+      // username: userName,
       password: password,
       profilePicture: profilePicture,
-      batchId: '',
+      // batchId: '',
     );
   }
 
@@ -99,8 +100,8 @@ class AuthHiveModel extends HiveObject {
     String? fullName,
     String? email,
     String? phoneNumber,
-    String? batchId,
-    String? userName,
+    // String? batchId,
+    // String? userName,
     String? password,
     String? profilePicture,
   }) {
@@ -109,8 +110,8 @@ class AuthHiveModel extends HiveObject {
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      batchId: batchId ?? this.batchId,
-      userName: userName ?? this.userName,
+      // batchId: batchId ?? this.batchId,
+      // userName: userName ?? this.userName,
       password: password ?? this.password,
       profilePicture: profilePicture ?? this.profilePicture,
     );
@@ -118,6 +119,8 @@ class AuthHiveModel extends HiveObject {
 
   @override
   String toString() {
-    return 'AuthHiveModel(authId: $authId, fullName: $fullName, email: $email, userName: $userName)';
+    return 'AuthHiveModel(authId: $authId, fullName: $fullName, email: $email, )';
   }
+
+  static fromApiModel(AuthApiModel user) {}
 }

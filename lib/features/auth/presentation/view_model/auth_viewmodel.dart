@@ -1,5 +1,6 @@
 import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/login_usecase.dart';
+import 'package:flutter_application_1/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/register_usecase.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,8 +37,8 @@ class AuthViewmodel extends Notifier<AuthState> {
       fullName: fullName,
       email: email,
       phoneNumber: phoneNumber,
-      batchId: batchId,
-      username: userName,
+      // batchId: batchId,
+      // username: userName,
       password: password,
     );
 
@@ -86,12 +87,26 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // Optional: Logout method
-  void logout() {
-    state = state.copyWith(
-      status: AuthStatus.unauthenticated,
-      authEntity: null,
-      errorMessage: null,
+  Future<void> logout() async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    final logoutUsecase = ref.read(logoutUsecaseProvider);
+    final result = await logoutUsecase();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message ?? 'Failed to logout',
+        );
+      },
+      (_) {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          authEntity: null,
+          errorMessage: null,
+        );
+      },
     );
   }
 }

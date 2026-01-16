@@ -1,6 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/core/services/connectivity/network_info.dart';
+import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/auth_datasource.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/remote/auth_remote_datasources.dart';
@@ -11,14 +13,19 @@ import 'package:flutter_application_1/features/auth/domain/repositories/auth_rep
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
+// UPDATED PROVIDER
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  final AuthDatasource = ref.read(authLocalDatasourceProvider);
-  final AuthRemoteDatasources = ref.read(authRemoteDatasourcesProvider);
+  // Read dependencies from other providers
+  final authLocalDataSource = ref.read(authLocalDatasourceProvider);
+  final authRemoteDataSource = ref.read(authRemoteDatasourcesProvider);
   final networkInfo = ref.read(NetworkInfoProvider);
+  final userSessionService = ref.read(userSessionServiceProvider);
+
   return AuthRepository(
-    authDatasource: ref.read(authLocalDatasourceProvider),
-    authRemoteDataSource: AuthRemoteDatasources,
+    authDatasource: authLocalDataSource,
+    authRemoteDataSource: authRemoteDataSource,
     networkInfo: networkInfo,
+    userSessionService: userSessionService, // Correctly passing dependency
   );
 });
 
@@ -27,14 +34,18 @@ class AuthRepository implements IAuthRepository {
   final IAuthRemoteDataSource _authRemoteDataSource;
   final NetworkInfo _networkInfo;
 
+  // FIXED: Added the missing private field declaration
+  final UserSessionService _userSessionService;
+
   AuthRepository({
     required IAuthLocalDatasource authDatasource,
     required IAuthRemoteDataSource authRemoteDataSource,
     required NetworkInfo networkInfo,
+    required UserSessionService userSessionService,
   }) : _authDatasource = authDatasource,
        _authRemoteDataSource = authRemoteDataSource,
-       _networkInfo = networkInfo;
-
+       _networkInfo = networkInfo,
+       _userSessionService = userSessionService; // Correct assignment
   @override
   Future<Either<Failure, AuthEntity>> getCurrentUser() async {
     try {
@@ -57,24 +68,48 @@ class AuthRepository implements IAuthRepository {
     String password,
   ) async {
     try {
-      final user = await _authDatasource.login(email, password);
-      if (user != null) {
-        final entity = user.toEntity();
+      final apiModel = await _authRemoteDataSource.login(email, password);
+      if (apiModel != null) {
+        final entity = apiModel.toEntity();
         return Right(entity);
       }
-      return Left(LocalDatabaseFailure(message: 'Invalid email or password'));
+      return const Left(ApiFailure(message: "invalid credentials"));
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message: e.response?.data['message'] ?? 'login failed',
+          statusCode: e.response?.statusCode,
+        ),
+      );
     } catch (e) {
-      return Left(LocalDatabaseFailure(message: e.toString()));
+      return Left(ApiFailure(message: e.toString()));
     }
+    // } else{
+    //   try{
+    //     final model = await _authDatasource.login(AutofillHints.email, AutofillHints.password);
+    //     if(model!=null){
+    //       final entity = model.toEntity();
+    //       return Right(entity);
+
+    //     }return const Left(
+    //       LocalDatabaseFailure(message: "invalid email or password"),
+    //     );
+    //   }catch(e){
+    //     return Left(LocalDatabaseFailure(message: e.toString()));
+    //   }
   }
 
   @override
   Future<Either<Failure, bool>> logout() async {
     try {
-      final result = await _authDatasource.logout();
-      return result
-          ? const Right(true)
-          : Left(LocalDatabaseFailure(message: 'Failed to logout user'));
+      // 1. Clear Hive local data
+      await _authDatasource.logout();
+
+      // 2. Clear Session Service (SharedPreferences)
+      // FIX: Changed deleteUserSession() to clearSession()
+      await _userSessionService.clearSession();
+
+      return const Right(true);
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }

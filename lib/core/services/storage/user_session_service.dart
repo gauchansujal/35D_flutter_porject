@@ -32,7 +32,7 @@ class UserSessionService {
     required String userId,
     required String email,
     required String fullName,
-    required String username,
+
     String? phoneNumber,
     String? password,
     String? batchId,
@@ -42,7 +42,7 @@ class UserSessionService {
     await _prefs.setString(_keyUserId, userId);
     await _prefs.setString(_keyUserEmail, email);
     await _prefs.setString(_keyUserFullName, fullName);
-    await _prefs.setString(_keyUserUsername, username);
+
     if (phoneNumber != null) {
       await _prefs.setString(_keyUserPhoneNumber, phoneNumber);
     }
@@ -96,7 +96,8 @@ class UserSessionService {
 
   // Clear user session (logout)
   Future<void> clearSession() async {
-    await _prefs.remove(_keyIsLoggedIn);
+    await _prefs.setBool(_keyIsLoggedIn, false);
+
     await _prefs.remove(_keyUserId);
     await _prefs.remove(_keyUserEmail);
     await _prefs.remove(_keyUserFullName);

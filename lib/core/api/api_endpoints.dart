@@ -12,8 +12,8 @@ class ApiEndpoints {
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // ============ Batch Endpoints ============
-  static const String batches = '/batches';
-  static String batchById(String id) => '/batches/$id';
+  // static const String batches = '/batches';
+  // static String batchById(String id) => '/batches/$id';
 
   // ============ Category Endpoints ============
   static const String categories = '/categories';

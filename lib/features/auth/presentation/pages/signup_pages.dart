@@ -60,8 +60,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text,
-      batchId: '',
-      username: '',
+      // batchId: '',
+      // username: '',
     );
 
     final repository = ref.read(authRepositoryProvider);

@@ -5,7 +5,7 @@ class AuthApiModel {
   final String fullname;
   final String email;
   final String? phoneNumber;
-  final String username;
+  // final String username;
   final String? password;
   final String? profilepicture;
 
@@ -14,7 +14,7 @@ class AuthApiModel {
     required this.fullname,
     required this.email,
     this.phoneNumber,
-    required this.username,
+    // required this.username,
     this.password,
     this.profilepicture,
   });
@@ -26,7 +26,7 @@ class AuthApiModel {
       "fullname": fullname,
       "email": email,
       "phoneNumber": phoneNumber,
-      "username": username,
+      // "username": username,
       "password": password,
       "profilePicture": profilepicture,
     };
@@ -39,7 +39,7 @@ class AuthApiModel {
       fullname: json['fullname'] as String,
       email: json['email'] as String,
       phoneNumber: json['phoneNumber'] as String,
-      username: json['username'] as String,
+     // username: json['username'] as String,
       profilepicture: json['profilePicture'] as String?,
     );
   }
@@ -50,11 +50,11 @@ class AuthApiModel {
       userId: userid,
       fullName: fullname,
       email: email,
-      username: username,
+      // username: username,
       phoneNumber: phoneNumber,
       password: password,
       profilePicture: profilepicture,
-      batchId: '',
+      // batchId: '',
     );
   }
 
@@ -65,7 +65,7 @@ class AuthApiModel {
       fullname: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
-      username: entity.username,
+      //username: entity.username,
       password: entity.password,
       profilepicture: entity.profilePicture,
     );

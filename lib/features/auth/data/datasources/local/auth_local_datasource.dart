@@ -35,7 +35,7 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
           fullName: user.fullName,
           phoneNumber: user.phoneNumber,
           profilePicture: user.profilePicture,
-          username: user.userName,
+        
           password: user.password,
         );
       }
