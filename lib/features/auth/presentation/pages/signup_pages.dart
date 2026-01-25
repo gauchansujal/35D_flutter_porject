@@ -52,8 +52,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
-
-    setState(() => _isLoading = true);
+     setState(() => _isLoading = true);
 
     final entity = AuthEntity(
       fullName: _fullNameController.text.trim(),
