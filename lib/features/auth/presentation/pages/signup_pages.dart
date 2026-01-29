@@ -4,6 +4,7 @@ import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/features/auth/data/repositories/auth_repository.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
+import 'package:flutter_application_1/features/auth/presentation/pages/login_pages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SignupPage extends ConsumerStatefulWidget {
@@ -52,7 +53,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
-     setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
     final entity = AuthEntity(
       fullName: _fullNameController.text.trim(),
@@ -105,7 +106,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed:
+              () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) {
+                    return const LoginPages();
+                  },
+                ),
+              ),
         ),
       ),
       backgroundColor: Colors.white,

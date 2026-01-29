@@ -3,7 +3,7 @@ import 'package:flutter_application_1/core/utils/snackbar_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import 'dart:io';
 import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 
@@ -51,7 +51,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final List<XFile> _selectedmedia = []; // store images and video
+  final List<XFile> _selectedmedia = [];
+  // sSummary in Nepali style (simple)
+  // _selectedmedia = सिर्फ एक लिस्ट हो, फोटो राख्ने ठाउँ होइन
+  // फोटो भनेको phone को cache मा अस्थायी रूपमा save हुन्छ
+  // तिमीले app बन्द गरेर फेरि खोल्दा _selectedmedia खाली हुन्छ → फोटो हराउँछ (preview मात्र हो)
   final ImagePicker _imagePicker = ImagePicker();
 
   Future<void> _cameraBataKhicha() async {
@@ -75,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   //code for gallary
-  Future<void> _pickFromGallary({bool allowMuiltiple = false}) async {
+  Future<void> _pickFromGallery({bool allowMuiltiple = false}) async {
     try {
       if (allowMuiltiple) {
         final List<XFile>? images = await _imagePicker.pickMultiImage(
@@ -94,20 +98,26 @@ class _ProfilePageState extends State<ProfilePage> {
         );
         if (image != null) {
           setState(() {
-            setState(() {
-              _selectedmedia.clear();
-              _selectedmedia.addAll([image]);
-            });
+            _selectedmedia.clear();
+            _selectedmedia.add(image); // ← FIXED: direct add, no extra list
           });
         }
       }
     } catch (e) {
-      debugPrint('gallery error:$e');
-      SnackbarUtils.showError(context, 'failed to pick image from gallary ');
+      debugPrint('gallery error: $e');
+      SnackbarUtils.showError(context, 'Failed to pick image from gallery');
     }
   }
 
   //code for video
+
+  // code for dilogbox : showdilog for menu
+  // Future<void> _pickMedia() async {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (context) => SafeArea(child: column()),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -185,13 +195,16 @@ class _ProfilePageState extends State<ProfilePage> {
                   radius: 70,
                   backgroundColor: Colors.blue.shade700,
                   backgroundImage:
-                      user.profilePicture != null &&
+                      _selectedmedia.isNotEmpty
+                          ? FileImage(File(_selectedmedia.first.path))
+                          : user.profilePicture != null &&
                               user.profilePicture!.trim().isNotEmpty
                           ? NetworkImage(user.profilePicture!)
                           : null,
                   child:
-                      user.profilePicture == null ||
-                              user.profilePicture!.trim().isEmpty
+                      _selectedmedia.isEmpty &&
+                              (user.profilePicture == null ||
+                                  user.profilePicture!.trim().isEmpty)
                           ? const Icon(
                             Icons.person,
                             size: 70,
@@ -215,11 +228,26 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton.icon(
-                      onPressed: _pickFromGallary,
+                      onPressed: _pickFromGallery,
                       icon: const Icon(Icons.photo_camera),
                       label: const Text("Upload Photo"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    ElevatedButton.icon(
+                      onPressed:
+                          _cameraBataKhicha, // ← your existing camera function
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Take Photo"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal.shade600,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
