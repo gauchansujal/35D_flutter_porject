@@ -142,8 +142,8 @@ class AuthViewmodel extends Notifier<AuthState> {
         );
         // SAVE TO SHARED PREFERENCES FOR PERSISTENCE
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_fullname', authEntity.fullName);
-        await prefs.setString('user_email', authEntity.email);
+        await prefs.setString('user_fullname', authEntity.fullName ?? '');
+        await prefs.setString('user_email', authEntity.email ?? '');
         await prefs.setString(
           'user_profile_pic',
           authEntity.profilePicture ?? '',
