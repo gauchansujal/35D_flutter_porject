@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/features/dashboard/persentation/pages/profile_screen.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/pages/setting_screen.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/widgets/bike_card.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/widgets/bike_search.dart';
 import 'package:flutter_application_1/core/widgets/header_widget.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/widgets/quick_access.dart';
+import 'package:flutter_application_1/features/profile/presentation/pages/profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

@@ -1,5 +1,6 @@
 import 'package:flutter_application_1/core/api/api_client.dart';
 import 'package:flutter_application_1/core/api/api_endpoints.dart';
+import 'package:flutter_application_1/core/services/storage/token_services.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/auth_datasource.dart';
 import 'package:flutter_application_1/features/auth/data/models/auth_api_model.dart';
@@ -10,6 +11,7 @@ final authRemoteDatasourcesProvider = Provider<IAuthRemoteDataSource>((ref) {
   return AuthRemoteDataSources(
     apiClient: ref.read(apiClientProvider),
     userSessionService: ref.read(userSessionServiceProvider),
+    tokenService: ref.read(tokenServicesProvider),
   );
 });
 
@@ -17,12 +19,15 @@ final authRemoteDatasourcesProvider = Provider<IAuthRemoteDataSource>((ref) {
 class AuthRemoteDataSources implements IAuthRemoteDataSource {
   final ApiClient _apiClient;
   final UserSessionService _userSessionService;
+  final TokenServices _tokenServices;
 
   AuthRemoteDataSources({
     required ApiClient apiClient,
     required UserSessionService userSessionService,
+    required TokenServices tokenService,
   }) : _apiClient = apiClient,
-       _userSessionService = userSessionService;
+       _userSessionService = userSessionService,
+       _tokenServices = tokenService;
 
   @override
   Future<AuthApiModel?> getUserById(String authId) async {
@@ -51,6 +56,9 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
         email: user.email,
         fullName: user.fullname,
       );
+      //save token
+      final token = response.data['token'] as String?;
+      await _tokenServices.saveToken(token!);
       return user;
     }
     return null;
