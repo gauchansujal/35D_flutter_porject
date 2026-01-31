@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/error/failures.dart';
@@ -10,8 +11,9 @@ import 'package:flutter_application_1/features/auth/data/models/auth_api_model.d
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
+import 'package:flutter_application_1/model/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
+
 
 // UPDATED PROVIDER
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
@@ -63,45 +65,34 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthEntity>> login(
-    String email,
-    String password,
-  ) async {
-    try {
-      final apiModel = await _authRemoteDataSource.login(email, password);
-      if (apiModel != null) {
-        final entity = apiModel.toEntity();
-        return Right(entity);
-      }
-      return const Left(ApiFailure(message: "invalid credentials"));
-    } on DioException catch (e) {
-      return Left(
-        ApiFailure(
-          message: e.response?.data['message'] ?? 'login failed',
-          statusCode: e.response?.statusCode,
-        ),
-      );
-    } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
-    }
-    // } else{
-    //   try{
-    //     final model = await _authDatasource.login(AutofillHints.email, AutofillHints.password);
-    //     if(model!=null){
-    //       final entity = model.toEntity();
-    //       return Right(entity);
+Future<Either<Failure, AuthEntity>> login(
+  String email,
+  String password,
+) async {
+  try {
+    final apiModel = await _authRemoteDataSource.login(email, password);
 
-    //     }return const Left(
-    //       LocalDatabaseFailure(message: "invalid email or password"),
-    //     );
-    //   }catch(e){
-    //     return Left(LocalDatabaseFailure(message: e.toString()));
-    //   }
+    if (apiModel != null) {
+      final entity = apiModel.toEntity();
+      return Right(entity);
+    }
+
+    return const Left(ApiFailure(message: "invalid credentials"));
+  } on DioException catch (e) {
+    return Left(
+      ApiFailure(
+        message: e.response?.data['message'] ?? 'login failed',
+        statusCode: e.response?.statusCode,
+      ),
+    );
+  } catch (e) {
+    return Left(ApiFailure(message: e.toString()));
   }
+}
 
   @override
-  Future<Either<Failure, bool>> logout() async {
-    try {
+  Future<Either<Failure, bool>> logout() async{
+      try {
       // 1. Clear Hive local data
       await _authDatasource.logout();
 
@@ -116,10 +107,10 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> register(AuthEntity user) async {
+  Future<Either<Failure, bool>> register(AuthEntity entity) async{
     if (await _networkInfo.isConnected) {
       try {
-        final apiModel = AuthApiModel.fromEntity(user);
+        final apiModel = AuthApiModel.fromEntity(entity);
         await _authRemoteDataSource.register(apiModel);
         return const Right(true);
       } on DioException catch (e) {
@@ -134,7 +125,7 @@ class AuthRepository implements IAuthRepository {
       }
     } else {
       try {
-        final existingUser = await _authDatasource.getUserByEmail(user.email);
+        final existingUser = await _authDatasource.getUserByEmail(entity.email ?? '');
         if (existingUser != null) {
           return const Left(
             LocalDatabaseFailure(message: "email alreday registred"),
@@ -147,23 +138,4 @@ class AuthRepository implements IAuthRepository {
       }
     }
   }
-  //   try {
-  //     // Optional: Check if email already exists
-  //     final emailExists = await _authDatasource.isEmailExists(
-  //       entity.email ?? '',
-  //     );
-  //     if (emailExists) {
-  //       return Left(LocalDatabaseFailure(message: 'Email already registered'));
-  //     }
-
-  //     final model = AuthHiveModel.fromEntity(entity);
-  //     final result = await _authDatasource.register(model);
-
-  //     return result
-  //         ? const Right(true)
-  //         : Left(LocalDatabaseFailure(message: 'Failed to register user'));
-  //   } catch (e) {
-  //     return Left(LocalDatabaseFailure(message: e.toString()));
-  //   }
-  // }
-}
+  }

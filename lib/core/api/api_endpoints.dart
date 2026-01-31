@@ -51,6 +51,8 @@ class ApiEndpoints {
   static const String items = '/items';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
+  static String uploadProfileImage = '/items/upload-photo';
+  static String itemUplodeVideo = '/items/uplode-video';
 
   // ============ Comment Endpoints ============
   static const String comments = '/comments';

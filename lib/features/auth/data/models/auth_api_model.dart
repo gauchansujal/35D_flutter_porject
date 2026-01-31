@@ -62,8 +62,8 @@ class AuthApiModel {
   factory AuthApiModel.fromEntity(AuthEntity entity) {
     return AuthApiModel(
       userid: entity.userId,
-      fullname: entity.fullName,
-      email: entity.email,
+      fullname: entity.fullName??'',
+      email: entity.email??'',
       phoneNumber: entity.phoneNumber,
       //username: entity.username,
       password: entity.password,

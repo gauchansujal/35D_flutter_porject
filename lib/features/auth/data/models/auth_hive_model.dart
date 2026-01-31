@@ -56,15 +56,15 @@ class AuthHiveModel extends HiveObject {
       // userName: entity.username ?? '',
       password: entity.password,
       profilePicture: entity.profilePicture,
-    );
+    ); 
   }
 
   // Convert to domain entity
   AuthEntity toEntity() {
     return AuthEntity(
       userId: authId,
-      fullName: fullName,
-      email: email,
+      fullName: fullName ?? '',
+      email: email?? '',
       phoneNumber: phoneNumber,
       // batchId: batchId,
       // username: userName,
