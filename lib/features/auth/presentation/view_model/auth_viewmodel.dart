@@ -1,10 +1,14 @@
-import 'package:flutter/material.dart'; // ← added for WidgetsBinding
+import 'dart:io'; // ← required for File
+
+import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/login_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/register_usecase.dart';
+import 'package:flutter_application_1/features/auth/domain/usecases/uplode_photo_usecase.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
+import 'package:flutter_application_1/features/profile/domain/usecases/uplode_photo_usecase.dart'; // note: typo "uplode" – consider renaming to upload
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,15 +20,16 @@ final authViewModelProvider = NotifierProvider<AuthViewmodel, AuthState>(
 class AuthViewmodel extends Notifier<AuthState> {
   late final RegisterUsecase _registerUsecase;
   late final LoginUsecase _loginUsecase;
+  late final UplodePhotoUsecase
+  _uploadPhotoUsecase; // renamed variable for clarity
 
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
-    _loginUsecase = ref.read(
-      LoginUsecaseProvider,
-    ); // ← fixed casing (was LoginUsecaseProvider)
+    _loginUsecase = ref.read(LoginUsecaseProvider);
+    _uploadPhotoUsecase = ref.read(UplodePhotoUsecaseProvider);
 
-    // Trigger async restore after first frame
+    // Restore session after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryRestoreSession();
     });
@@ -33,7 +38,6 @@ class AuthViewmodel extends Notifier<AuthState> {
   }
 
   Future<void> _tryRestoreSession() async {
-    // Avoid running multiple times or when already logged in
     if (state.status != AuthStatus.initial) return;
 
     state = state.copyWith(status: AuthStatus.loading);
@@ -41,27 +45,22 @@ class AuthViewmodel extends Notifier<AuthState> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final fullName = prefs.getString('user_fullname');
-      final email = prefs.getString('user_email');
-      final profilePic = prefs.getString('user_profile_pic');
-      final phone = prefs.getString('user_phone');
+      final fullName = prefs.getString('user_fullname')?.trim();
+      final email = prefs.getString('user_email')?.trim();
+      final profilePic = prefs.getString('user_profile_pic')?.trim();
+      final phone = prefs.getString('user_phone')?.trim();
 
       if (fullName != null &&
-          fullName.trim().isNotEmpty &&
+          fullName.isNotEmpty &&
           email != null &&
-          email.trim().isNotEmpty) {
+          email.isNotEmpty) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: AuthEntity(
             fullName: fullName,
             email: email,
-            profilePicture:
-                profilePic != null && profilePic.trim().isNotEmpty
-                    ? profilePic
-                    : null,
-            phoneNumber:
-                phone != null && phone.trim().isNotEmpty ? phone : null,
-            // Add other fields (id, username, token, batchId, etc.) if you save them
+            profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
+            phoneNumber: phone?.isNotEmpty == true ? phone : null,
           ),
           errorMessage: null,
         );
@@ -69,6 +68,7 @@ class AuthViewmodel extends Notifier<AuthState> {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
           authEntity: null,
+          errorMessage: null,
         );
       }
     } catch (e) {
@@ -79,7 +79,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     }
   }
 
-  // ========== REGISTER ==========
+  // REGISTER (unchanged)
   Future<void> register({
     required String fullName,
     required String email,
@@ -94,8 +94,6 @@ class AuthViewmodel extends Notifier<AuthState> {
       fullName: fullName,
       email: email,
       phoneNumber: phoneNumber,
-      // batchId: batchId,
-      // username: userName,
       password: password,
     );
 
@@ -117,7 +115,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // ========== LOGIN ==========
+  // LOGIN (unchanged)
   Future<void> login({
     required String username,
     required String password,
@@ -140,7 +138,7 @@ class AuthViewmodel extends Notifier<AuthState> {
           status: AuthStatus.authenticated,
           authEntity: authEntity,
         );
-        // SAVE TO SHARED PREFERENCES FOR PERSISTENCE
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_fullname', authEntity.fullName ?? '');
         await prefs.setString('user_email', authEntity.email ?? '');
@@ -153,6 +151,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
+  // LOGOUT (unchanged)
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
@@ -172,14 +171,62 @@ class AuthViewmodel extends Notifier<AuthState> {
           authEntity: null,
           errorMessage: null,
         );
-        // CLEAR SHARED PREFERENCES ON LOGOUT
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('user_fullname');
         await prefs.remove('user_email');
         await prefs.remove('user_profile_pic');
         await prefs.remove('user_phone');
-        // await prefs.remove('auth_token'); // if you have token
       },
     );
+  }
+
+  // ── NEW: Upload Photo ────────────────────────────────────────────────
+  Future<void> uploadPhoto(File photo) async {
+    // Set loading state
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
+    final result = await _uploadPhotoUsecase(photo);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message ?? 'Failed to upload photo',
+        );
+      },
+      (imageName) {
+        // Success: update the auth entity with new profile picture URL
+        // final currentUser = state.authEntity;
+
+        // if (currentUser != null) {
+        //   final updatedUser = currentUser.copyWith(profilePicture: uploadedUrl);
+
+        // Update state
+        state = state.copyWith(
+          status: AuthStatus.loading, // or .success if you add it
+          uploadPhotoName: imageName,
+        );
+
+        // Persist the new profile picture URL
+        // final prefs = await SharedPreferences.getInstance();
+        // await prefs.setString('user_profile_pic', uploadedUrl);
+        // } else {
+        //   // Rare case: user not logged in → just show success but no update
+        //   state = state.copyWith(
+        //     status: AuthStatus.sucess, // add this status if needed
+        //     errorMessage: null,
+        //   );
+        // }
+      },
+    );
+  }
+
+  void clearError() {
+    state = state.copyWith(errorMessage: null);
+  }
+
+  void updateUser(AuthEntity? updatedUser) {
+    state = state.copyWith(authEntity: updatedUser);
   }
 }

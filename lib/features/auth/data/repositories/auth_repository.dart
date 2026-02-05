@@ -14,7 +14,6 @@ import 'package:flutter_application_1/features/auth/domain/repositories/auth_rep
 import 'package:flutter_application_1/model/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 // UPDATED PROVIDER
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   // Read dependencies from other providers
@@ -65,34 +64,34 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-Future<Either<Failure, AuthEntity>> login(
-  String email,
-  String password,
-) async {
-  try {
-    final apiModel = await _authRemoteDataSource.login(email, password);
+  Future<Either<Failure, AuthEntity>> login(
+    String email,
+    String password,
+  ) async {
+    try {
+      final apiModel = await _authRemoteDataSource.login(email, password);
 
-    if (apiModel != null) {
-      final entity = apiModel.toEntity();
-      return Right(entity);
+      if (apiModel != null) {
+        final entity = apiModel.toEntity();
+        return Right(entity);
+      }
+
+      return const Left(ApiFailure(message: "invalid credentials"));
+    } on DioException catch (e) {
+      return Left(
+        ApiFailure(
+          message: e.response?.data['message'] ?? 'login failed',
+          statusCode: e.response?.statusCode,
+        ),
+      );
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
     }
-
-    return const Left(ApiFailure(message: "invalid credentials"));
-  } on DioException catch (e) {
-    return Left(
-      ApiFailure(
-        message: e.response?.data['message'] ?? 'login failed',
-        statusCode: e.response?.statusCode,
-      ),
-    );
-  } catch (e) {
-    return Left(ApiFailure(message: e.toString()));
   }
-}
 
   @override
-  Future<Either<Failure, bool>> logout() async{
-      try {
+  Future<Either<Failure, bool>> logout() async {
+    try {
       // 1. Clear Hive local data
       await _authDatasource.logout();
 
@@ -107,7 +106,7 @@ Future<Either<Failure, AuthEntity>> login(
   }
 
   @override
-  Future<Either<Failure, bool>> register(AuthEntity entity) async{
+  Future<Either<Failure, bool>> register(AuthEntity entity) async {
     if (await _networkInfo.isConnected) {
       try {
         final apiModel = AuthApiModel.fromEntity(entity);
@@ -125,7 +124,9 @@ Future<Either<Failure, AuthEntity>> login(
       }
     } else {
       try {
-        final existingUser = await _authDatasource.getUserByEmail(entity.email ?? '');
+        final existingUser = await _authDatasource.getUserByEmail(
+          entity.email ?? '',
+        );
         if (existingUser != null) {
           return const Left(
             LocalDatabaseFailure(message: "email alreday registred"),
@@ -138,4 +139,49 @@ Future<Either<Failure, AuthEntity>> login(
       }
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> createProfile(AuthEntity profile) {
+    // TODO: implement createProfile
+    throw UnimplementedError();
   }
+
+  @override
+  Future<Either<Failure, bool>> deleteProfile(String profileId) {
+    // TODO: implement deleteProfile
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, AuthEntity>> getprofile(String studentId) {
+    // TODO: implement getprofile
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateProfile(AuthEntity profilePicture) {
+    // TODO: implement updateProfile
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Either<Failure, String>> uplodeImage(image) async {
+    // it shoul be only insert in remot cause image take large space
+    if (await _networkInfo.isConnected) {
+      try {
+        final fileName = await _authRemoteDataSource.uploadProfileImage(image);
+        return Right(fileName!);
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFailure(message: "not internrt connetcion"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> uplodeVideo(video) {
+    // TODO: implement uplodeVideo
+    throw UnimplementedError();
+  }
+}
