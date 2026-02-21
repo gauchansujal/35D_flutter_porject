@@ -4,24 +4,26 @@ class AuthEntity extends Equatable {
   final String? userId;
   final String? fullName;
   final String? email;
-  final String? phoneNumber;
+  // final String? phoneNumber;
   // final String batchId;
   final String? password;
   // final String username;
   final String? profilePicture;
   final String? localProfilePicturePath;
+  final String? confirmPassword;
 
   const AuthEntity({
     this.userId,
     this.fullName,
     this.email,
-    this.phoneNumber,
+    // this.phoneNumber,
     // required this.batchId,
     // required this.username,
     this.password,
     this.profilePicture,
-    String? authId,
+
     this.localProfilePicturePath,
+    this.confirmPassword,
   });
 
   @override
@@ -29,7 +31,7 @@ class AuthEntity extends Equatable {
     userId,
     fullName,
     email,
-    phoneNumber,
+    // phoneNumber,
     // batchId,
     // username,
     password,
@@ -51,7 +53,7 @@ class AuthEntity extends Equatable {
       userId: userId ?? this.userId,
       fullName: fullName ?? this.fullName,
       email: email ?? this.email,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
+      // phoneNumber: phoneNumber ?? this.phoneNumber,
       password: password ?? this.password,
       profilePicture: profilePicture ?? this.profilePicture,
       localProfilePicturePath:

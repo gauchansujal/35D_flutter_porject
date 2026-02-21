@@ -5,27 +5,27 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // Base URL - change this for production
-  // static const String baseUrl = 'http://10.0.2.2:3000/api/v1';
-  //static const String baseUrl = 'http://localhost:3000/api/v1';
-  // For Android Emulator use: 'http://10.0.2.2:3000/api/v1'
-  // For iOS Simulator use: 'http://localhost:5000/api/v1'
-  // For Physical Device use your computer's IP: 'http://192.168.x.x:5000/api/v1'
+  // static const String baseUrl = 'http://10.0.2.2:5000/api/';
+  //static const String baseUrl = 'http://localhost:5000/api/';
+  // For Android Emulator use: 'http://10.0.2.2:5000/api/'
+  // For iOS Simulator use: 'http://localhost:5000/api/'
+  // For Physical Device use your computer's IP: 'http://192.168.x.x:5000/api/'
   static const bool isPhysicalDevice = false;
   static const String compIpAdress = "";
 
   static String get baseUrl {
     if (isPhysicalDevice) {
-      return 'http://$compIpAdress:3000/api/v1';
+      return 'http://$compIpAdress:5000/api/';
     }
 
     if (kIsWeb) {
-      return 'http://localhost:3000/api/v1';
+      return 'http://localhost:5000/api/';
     } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/v1';
+      return 'http://10.0.2.2:5000/api/';
     } else if (Platform.isIOS) {
-      return 'http://localhost:3000/api/v1';
+      return 'http://localhost:5000/api/';
     } else {
-      return 'http://localhost:3000/api/v1';
+      return 'http://localhost:5000/api/';
     }
   }
 
@@ -41,18 +41,19 @@ class ApiEndpoints {
   static String categoryById(String id) => '/categories/$id';
 
   // ============ Student Endpoints ============
-  static const String students = '/students';
-  static const String studentLogin = '/students/login';
-  static const String studentRegister = '/students/register';
-  static String studentById(String id) => '/students/$id';
-  static String studentPhoto(String id) => '/students/$id/photo';
+  static const String students = '/auth';
+  static const String studentLogin = '/auth/login';
+  static const String studentRegister = '/auth/register';
+  static String studentById(String id) => '/auth/$id';
+  static String studentPhoto(String id) => '/auth/$id/photo';
+  static String uploadProfileImage = '/auth/update-profile';
 
   // ============ Item Endpoints ============
   static const String items = '/items';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
-  static String uploadProfileImage = '/students/upload';
-  static String itemUplodeVideo = '/students/uplode-video';
+
+  static String itemUplodeVideo = '/auth/uplode-video';
 
   // ============ Comment Endpoints ============
   static const String comments = '/comments';

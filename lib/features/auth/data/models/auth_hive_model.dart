@@ -38,11 +38,12 @@ class AuthHiveModel extends HiveObject {
     String? authId,
     required this.fullName,
     required this.email,
-    this.phoneNumber,
+    // this.phoneNumber,
     // this.batchId,
     // required this.userName,
     this.password,
     this.profilePicture,
+    this.phoneNumber,
   }) : authId = authId ?? const Uuid().v4();
 
   // Factory from domain entity
@@ -51,12 +52,12 @@ class AuthHiveModel extends HiveObject {
       authId: entity.userId ?? const Uuid().v4(),
       fullName: entity.fullName ?? '',
       email: entity.email ?? '',
-      phoneNumber: entity.phoneNumber,
+      // phoneNumber: entity.phoneNumber,
       // batchId: entity.batchId,
       // userName: entity.username ?? '',
       password: entity.password,
       profilePicture: entity.profilePicture,
-    ); 
+    );
   }
 
   // Convert to domain entity
@@ -64,8 +65,8 @@ class AuthHiveModel extends HiveObject {
     return AuthEntity(
       userId: authId,
       fullName: fullName ?? '',
-      email: email?? '',
-      phoneNumber: phoneNumber,
+      email: email ?? '',
+      // phoneNumber: phoneNumber,
       // batchId: batchId,
       // username: userName,
       password: password,

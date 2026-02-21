@@ -4,7 +4,6 @@ import 'package:flutter_application_1/features/profile/domain/usecases/uplode_ph
 import 'package:flutter_application_1/features/profile/presentation/view_models/profile_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
@@ -56,7 +55,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final List<XFile> _selectedmedia = [];
   final ImagePicker _imagePicker = ImagePicker();
-  bool _isPicking = false;
 
   Future<void> _cameraBataKhicha() async {
     final hashPermission = await _userSangaPermissionLinuParcha(
@@ -82,57 +80,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
-  // Returns a permanent File that won't be deleted
-  Future<File> saveImagePermanently(XFile pickedImage) async {
+  Future<void> _pickFromGallery({bool allowMuiltiple = false}) async {
     try {
-      // Get permanent app directory
-      final appDir = await getApplicationDocumentsDirectory();
-
-      // Create a subfolder for profile pictures (optional but cleaner)
-      final profileDir = Directory('${appDir.path}/profile_pictures');
-      if (!await profileDir.exists()) {
-        await profileDir.create(recursive: true);
-      }
-
-      // Use original name or generate unique name
-      final String fileName =
-          pickedImage.name.isNotEmpty
-              ? pickedImage.name
-              : 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      final File permanentFile = File('${profileDir.path}/$fileName');
-
-      // Copy the image from temp to permanent location
-      await File(pickedImage.path).copy(permanentFile.path);
-
-      // Optional: delete the temporary file to save space
-      // await File(pickedImage.path).delete();
-
-      return permanentFile;
-    } catch (e) {
-      print("Error saving image permanently: $e");
-      rethrow;
-    }
-  }
-
-  Future<void> _pickFromGallery({bool allowMultiple = false}) async {
-    try {
-      if (allowMultiple) {
+      if (allowMuiltiple) {
         final List<XFile>? images = await _imagePicker.pickMultiImage(
           imageQuality: 80,
         );
         if (images != null && images.isNotEmpty) {
-          // For simplicity we take first image
-          final permanentFile = await saveImagePermanently(images.first);
-
           setState(() {
             _selectedmedia.clear();
-            _selectedmedia.add(XFile(permanentFile.path));
+            _selectedmedia.addAll(images);
           });
-
+          // If you want to upload multiple → loop here
+          // For now uploading only first one (as before)
           await ref
               .read(authViewModelProvider.notifier)
-              .uploadPhoto(permanentFile); // ← use permanent file
+              .uploadPhoto(File(images.first.path));
         }
       } else {
         final XFile? image = await _imagePicker.pickImage(
@@ -140,16 +103,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           imageQuality: 80,
         );
         if (image != null) {
-          final permanentFile = await saveImagePermanently(image);
-
           setState(() {
             _selectedmedia.clear();
-            _selectedmedia.add(XFile(permanentFile.path));
+            _selectedmedia.add(image);
           });
-
+          // upload image to server automatically
           await ref
               .read(authViewModelProvider.notifier)
-              .uploadPhoto(permanentFile);
+              .uploadPhoto(File(image.path));
         }
       }
     } catch (e) {

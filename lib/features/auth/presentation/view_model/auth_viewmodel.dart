@@ -48,7 +48,7 @@ class AuthViewmodel extends Notifier<AuthState> {
       final fullName = prefs.getString('user_fullname')?.trim();
       final email = prefs.getString('user_email')?.trim();
       final profilePic = prefs.getString('user_profile_pic')?.trim();
-      final phone = prefs.getString('user_phone')?.trim();
+      // final phone = prefs.getString('user_phone')?.trim();
 
       if (fullName != null &&
           fullName.isNotEmpty &&
@@ -60,7 +60,7 @@ class AuthViewmodel extends Notifier<AuthState> {
             fullName: fullName,
             email: email,
             profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
-            phoneNumber: phone?.isNotEmpty == true ? phone : null,
+            // phoneNumber: phone?.isNotEmpty == true ? phone : null,
           ),
           errorMessage: null,
         );
@@ -93,7 +93,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     final params = RegisterUsecaseParams(
       fullName: fullName,
       email: email,
-      phoneNumber: phoneNumber,
+
       password: password,
     );
 
@@ -146,7 +146,7 @@ class AuthViewmodel extends Notifier<AuthState> {
           'user_profile_pic',
           authEntity.profilePicture ?? '',
         );
-        await prefs.setString('user_phone', authEntity.phoneNumber ?? '');
+        // await prefs.setString('user_phone', authEntity.phoneNumber ?? '');
       },
     );
   }

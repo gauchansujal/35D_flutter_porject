@@ -36,7 +36,9 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
 
   @override
   Future<AuthApiModel?> getUserById(String authId) async {
-    final response = await _apiClient.get('${ApiEndpoints.students}/$authId');
+    final response = await _apiClient.get(
+      '${ApiEndpoints.studentById(authId)}',
+    );
 
     if (response.data['success'] == true) {
       return AuthApiModel.fromJson(
@@ -72,9 +74,17 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
 
   @override
   Future<AuthApiModel> register(AuthApiModel user) async {
+    final formData = FormData.fromMap({
+      ...user.toJson(), // ✅ has username, firstname, lastname, email, password
+      if (user.profilepicture != null)
+        'image': await MultipartFile.fromFile(
+          user.profilepicture!,
+          filename: user.profilepicture!.split('/').last,
+        ),
+    });
     final response = await _apiClient.post(
-      ApiEndpoints.students,
-      data: user.toJson(),
+      ApiEndpoints.studentRegister,
+      data: formData,
     );
 
     // Typo fix: 'sucess' → 'success'
@@ -95,7 +105,7 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
   Future<String> uploadProfileVideo(video) async {
     final fileName = video.path.split('/').last;
     final formData = FormData.fromMap({
-      'profilePicture': MultipartFile.fromFile(video.path, filename: fileName),
+      'image': MultipartFile.fromFile(video.path, filename: fileName),
     });
     //get token
     final token = _tokenServices.getToken();
@@ -109,22 +119,23 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
 
   @override
   Future<String?> uploadProfileImage(File image) async {
-    //c:asd/asd/a.jpg
     final fileName = image.path.split('/').last;
     final formData = FormData.fromMap({
-      'profilePicture': await MultipartFile.fromFile(
-        image.path,
-        filename: fileName,
-      ),
+      'image': await MultipartFile.fromFile(image.path, filename: fileName),
     });
-    //get token services
-    final token = _tokenServices.getToken();
+
+    final token = await _tokenServices.getToken(); // ✅ await
     final response = await _apiClient.uploadFile(
-      ApiEndpoints.uploadProfileImage,
-      formData: formData,
-      options: Options(headers: {'Authorization': 'bearer$token'}),
+      // ✅ put not uploadFile
+      ApiEndpoints.studentRegister,
+      formData: formData, // ✅ data not formData
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $token', // ✅ space fixed by await
+        },
+      ),
     );
-    var a = response.data['data'];
-    return a;
+
+    return response.data['data'] as String?;
   }
 }
