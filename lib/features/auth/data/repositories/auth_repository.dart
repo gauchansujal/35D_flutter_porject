@@ -8,10 +8,10 @@ import 'package:flutter_application_1/features/auth/data/datasources/auth_dataso
 import 'package:flutter_application_1/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/remote/auth_remote_datasources.dart';
 import 'package:flutter_application_1/features/auth/data/models/auth_api_model.dart';
-import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
+
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
-import 'package:flutter_application_1/model/user.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // UPDATED PROVIDER

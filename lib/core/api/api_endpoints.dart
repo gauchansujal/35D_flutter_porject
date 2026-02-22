@@ -48,8 +48,8 @@ class ApiEndpoints {
   static String studentPhoto(String id) => '/auth/$id/photo';
   static String uploadProfileImage = '/auth/update-profile';
 
-  // ============ Item Endpoints ============
-  static const String items = '/items';
+  // ============ bike Endpoints ============
+  static const String bike = '/bike';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
 

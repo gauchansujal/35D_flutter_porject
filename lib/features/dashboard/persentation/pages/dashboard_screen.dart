@@ -64,7 +64,7 @@ class HomePage extends StatelessWidget {
           SizedBox(height: 20),
           BikeSearch(),
           SizedBox(height: 20),
-          BikeCard(),
+          // BikeCard(),
         ],
       ),
     );

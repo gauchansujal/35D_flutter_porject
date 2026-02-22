@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:flutter_application_1/features/bike_card/presentation/pages/bike_page.dart';
 import 'icon_box.dart';
 
 class QuickAccess extends StatelessWidget {
@@ -20,17 +22,19 @@ class QuickAccess extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                // action for Description button
-                print("Description tapped");
+                // ✅ Navigate to BikeListPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const BikeListPage()),
+                );
               },
               child: const IconBox(
-                icon: Icons.description,
+                icon: Icons.two_wheeler, // ✅ bike icon makes more sense
                 color: Colors.orange,
               ),
             ),
             GestureDetector(
               onTap: () {
-                // action for Notifications button
                 print("Notifications tapped");
               },
               child: const IconBox(
@@ -40,7 +44,6 @@ class QuickAccess extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                // action for Wallet button
                 print("Wallet tapped");
               },
               child: const IconBox(icon: Icons.wallet, color: Colors.red),
