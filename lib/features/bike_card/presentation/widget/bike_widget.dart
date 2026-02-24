@@ -1,21 +1,52 @@
-// lib/features/bike_card/presentation/widgets/bike_card.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/features/Booking/domain/entites/booking_enitities.dart';
+import 'package:flutter_application_1/features/Booking/presentation/providers/state/booking_state.dart';
+import 'package:flutter_application_1/features/Booking/presentation/view_models/booking_viewmodel.dart';
 import 'package:flutter_application_1/features/bike_card/domain/entites/bike_entity.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BikeCard extends StatelessWidget {
+class BikeCard extends ConsumerWidget {
+  // ← ConsumerWidget to access ref
   final BikeEntity bike;
   final VoidCallback? onTap;
 
   const BikeCard({super.key, required this.bike, this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ← WidgetRef ref
+
+    // Listen to booking state for loading/error/success
+    ref.listen<BookingState>(bookingViewModelProvider, (previous, next) {
+      if (next.status == BookingStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Bike booked successfully!'),
+            backgroundColor: Color(0xFF2ECC71),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      if (next.status == BookingStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ ${next.errorMessage ?? 'Booking failed'}'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+
+    final bookingState = ref.watch(bookingViewModelProvider);
+    final isBooking = bookingState.isCreating;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1E2A), // dark navy card
+          color: const Color(0xFF1C1E2A),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -31,7 +62,6 @@ class BikeCard extends StatelessWidget {
             // ── Image + Badges ──────────────────────────────────────
             Stack(
               children: [
-                // Bike Image
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
@@ -49,9 +79,7 @@ class BikeCard extends StatelessWidget {
                                 child,
                                 loadingProgress,
                               ) {
-                                if (loadingProgress == null) {
-                                  return child;
-                                }
+                                if (loadingProgress == null) return child;
                                 return const Center(
                                   child: CircularProgressIndicator(
                                     color: Color(0xFFE91E8C),
@@ -60,30 +88,20 @@ class BikeCard extends StatelessWidget {
                                 );
                               },
                               errorBuilder: (context, error, stackTrace) {
-                                // Debug prints – very important for troubleshooting
-                                debugPrint(
-                                  'Image failed to load: ${bike.fullImageUrl}',
-                                );
-                                debugPrint('Error: $error');
-                                debugPrint('Stack: $stackTrace');
                                 return _placeholder();
                               },
                             )
                             : _placeholder(),
                   ),
                 ),
-
-                // Brand Badge (top left)
                 Positioned(
                   top: 12,
                   left: 12,
                   child: _Badge(
                     label: bike.brand,
-                    color: const Color(0xFFE91E8C), // pink
+                    color: const Color(0xFFE91E8C),
                   ),
                 ),
-
-                // Availability Badge (top right)
                 Positioned(
                   top: 12,
                   right: 12,
@@ -91,8 +109,8 @@ class BikeCard extends StatelessWidget {
                     label: bike.isAvailable ? '✓ Available' : 'Unavailable',
                     color:
                         bike.isAvailable
-                            ? const Color(0xFF2ECC71) // green
-                            : const Color(0xFFE74C3C), // red
+                            ? const Color(0xFF2ECC71)
+                            : const Color(0xFFE74C3C),
                   ),
                 ),
               ],
@@ -104,7 +122,6 @@ class BikeCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Bike Name
                   Text(
                     bike.name,
                     style: const TextStyle(
@@ -115,8 +132,6 @@ class BikeCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Price Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -128,12 +143,8 @@ class BikeCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 14),
-
-                  // Divider
                   Divider(color: Colors.white.withOpacity(0.08), height: 1),
                   const SizedBox(height: 12),
-
-                  // Stats Row — fuel type + mileage
                   Row(
                     children: [
                       const Icon(
@@ -164,7 +175,6 @@ class BikeCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      // Engine CC badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -185,6 +195,46 @@ class BikeCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+
+                  // ── Book Now Button ─────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            bike.isAvailable
+                                ? const Color(0xFFE91E8C)
+                                : Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed:
+                          bike.isAvailable && !isBooking
+                              ? () => _onBookNow(context, ref)
+                              : null,
+                      child:
+                          isBooking
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Text(
+                                bike.isAvailable ? 'Book Now' : 'Unavailable',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -194,9 +244,18 @@ class BikeCard extends StatelessWidget {
     );
   }
 
-  // Simple per day calculation (improved parsing)
+  // ── Book Now Handler ──────────────────────────────────────────────────────
+  void _onBookNow(BuildContext context, WidgetRef ref) {
+    final booking = BookingEnitities(
+      bikeId: bike.id,
+      bookingDate: DateTime.now(),
+      returnDate: DateTime.now().add(const Duration(hours: 1)), // default 1hr
+    );
+
+    ref.read(bookingViewModelProvider.notifier).createBooking(booking);
+  }
+
   String _calculatePerDay(String hourlyPrice) {
-    // Remove non-numeric characters and parse
     final cleanPrice = hourlyPrice.replaceAll(RegExp(r'[^0-9]'), '');
     final price = int.tryParse(cleanPrice) ?? 0;
     return '\$${price * 8}';

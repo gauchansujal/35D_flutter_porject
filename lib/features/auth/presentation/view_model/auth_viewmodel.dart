@@ -8,7 +8,7 @@ import 'package:flutter_application_1/features/auth/domain/usecases/logout_useca
 import 'package:flutter_application_1/features/auth/domain/usecases/register_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/uplode_photo_usecase.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
-import 'package:flutter_application_1/features/profile/domain/usecases/uplode_photo_usecase.dart'; // note: typo "uplode" – consider renaming to upload
+// note: typo "uplode" – consider renaming to upload
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/utils/snackbar_utils.dart';
-import 'package:flutter_application_1/features/profile/domain/usecases/uplode_photo_usecase.dart';
-import 'package:flutter_application_1/features/profile/presentation/view_models/profile_viewmodel.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';

@@ -64,9 +64,12 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
         email: user.email,
         fullName: user.fullname,
       );
-      //save token
+
       final token = response.data['token'] as String?;
       await _tokenServices.saveToken(token!);
+      // ADD THIS TEMPORARILY
+      final verify = await _tokenServices.getToken();
+      print('✅ TOKEN SAVED: $verify');
       return user;
     }
     return null;

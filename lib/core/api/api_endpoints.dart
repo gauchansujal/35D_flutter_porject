@@ -55,10 +55,10 @@ class ApiEndpoints {
 
   static String itemUplodeVideo = '/auth/uplode-video';
 
-  // ============ Comment Endpoints ============
-  static const String comments = '/comments';
+  // ============ booking Endpoints ============
+  static const String booking = '/booking';
 
-  static const String login = '/login';
+  static const String uplodedocument = '/dl';
   static String commentById(String id) => '/comments/$id';
   static String commentsByItem(String itemId) => '/comments/item/$itemId';
   static String commentLike(String id) => '/comments/$id/like';

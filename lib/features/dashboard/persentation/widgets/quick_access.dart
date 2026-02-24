@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_application_1/features/bike_card/presentation/pages/bike_page.dart';
+import 'package:flutter_application_1/features/uplodedocument/presentation/pages/uplod_document.dart';
 import 'icon_box.dart';
 
 class QuickAccess extends StatelessWidget {
@@ -44,9 +45,12 @@ class QuickAccess extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {
-                print("Wallet tapped");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UploadDocumentPage()),
+                );
               },
-              child: const IconBox(icon: Icons.wallet, color: Colors.red),
+              child: const IconBox(icon: Icons.upload_file, color: Colors.red),
             ),
           ],
         ),
