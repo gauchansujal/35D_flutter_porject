@@ -12,6 +12,7 @@ class BikeRemoteDatasource implements IBikeRemoteDataSource {
   final ApiClient _apiClient;
 
   BikeRemoteDatasource({required ApiClient apiClient}) : _apiClient = apiClient;
+
   @override
   Future<void> addBike(BikeModel bike) {
     // TODO: implement addBike
@@ -27,7 +28,11 @@ class BikeRemoteDatasource implements IBikeRemoteDataSource {
   @override
   Future<List<BikeModel>> getAllBikes() async {
     final response = await _apiClient.get('bike');
-    return (response.data as List).map((e) => BikeModel.formJson(e)).toList();
+    // ✅ FIX: response.data is a Map like { "bikes": [...], "pagination": {...} }
+    //         so we must access response.data['bikes'] before casting to List
+    return (response.data['bikes'] as List)
+        .map((e) => BikeModel.formJson(e))
+        .toList();
   }
 
   @override
