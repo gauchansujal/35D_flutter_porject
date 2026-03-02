@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_application_1/core/api/api_client.dart';
 import 'package:flutter_application_1/core/api/api_endpoints.dart';
@@ -8,7 +7,8 @@ import 'package:flutter_application_1/core/services/storage/token_services.dart'
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
 import 'package:flutter_application_1/features/auth/data/datasources/auth_datasource.dart';
 import 'package:flutter_application_1/features/auth/data/models/auth_api_model.dart';
-import 'package:flutter_application_1/features/auth/domain/usecases/uplode_photo_usecase.dart';
+import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// PROVIDER
@@ -140,5 +140,40 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
     );
 
     return response.data['data'] as String?;
+  }
+
+  @override
+  Future<void> updateProfile(AuthEntity profile) async {
+    final Map<String, dynamic> fields = {};
+
+    // ✅ Only add fields that are NOT null — backend keeps old value for rest
+    if (profile.fullName != null && profile.fullName!.trim().isNotEmpty) {
+      fields['fullName'] = profile.fullName;
+    }
+    if (profile.email != null && profile.email!.trim().isNotEmpty) {
+      fields['email'] = profile.email;
+    }
+    if (profile.password != null && profile.password!.trim().isNotEmpty) {
+      fields['password'] = profile.password;
+    }
+
+    // ✅ Use localProfilePicturePath (local file path) not profilePicture (server URL)
+    if (profile.localProfilePicturePath != null) {
+      final fileName = profile.localProfilePicturePath!.split('/').last;
+      fields['image'] = await MultipartFile.fromFile(
+        profile.localProfilePicturePath!,
+        filename: fileName,
+      );
+    }
+
+    final formData = FormData.fromMap(fields);
+    final token = await _tokenServices.getToken();
+
+    await _apiClient.put(
+      // ✅ PUT not POST
+      ApiEndpoints.StudentUpdateProfile,
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
   }
 }

@@ -1,18 +1,16 @@
-import 'dart:io'; // ← required for File
+import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/login_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/register_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/uplode_photo_usecase.dart';
+import 'package:flutter_application_1/features/auth/domain/usecases/update_profile_usecase.dart'; // ✅ new
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
-// note: typo "uplode" – consider renaming to upload
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Provider
 final authViewModelProvider = NotifierProvider<AuthViewmodel, AuthState>(
   () => AuthViewmodel(),
 );
@@ -20,16 +18,16 @@ final authViewModelProvider = NotifierProvider<AuthViewmodel, AuthState>(
 class AuthViewmodel extends Notifier<AuthState> {
   late final RegisterUsecase _registerUsecase;
   late final LoginUsecase _loginUsecase;
-  late final UplodePhotoUsecase
-  _uploadPhotoUsecase; // renamed variable for clarity
+  late final UplodePhotoUsecase _uploadPhotoUsecase;
+  late final UpdateProfileUsecase _updateProfileUsecase; // ✅ new
 
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(LoginUsecaseProvider);
     _uploadPhotoUsecase = ref.read(UplodePhotoUsecaseProvider);
+    _updateProfileUsecase = ref.read(updateProfileUsecaseProvider); // ✅ new
 
-    // Restore session after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryRestoreSession();
     });
@@ -48,7 +46,6 @@ class AuthViewmodel extends Notifier<AuthState> {
       final fullName = prefs.getString('user_fullname')?.trim();
       final email = prefs.getString('user_email')?.trim();
       final profilePic = prefs.getString('user_profile_pic')?.trim();
-      // final phone = prefs.getString('user_phone')?.trim();
 
       if (fullName != null &&
           fullName.isNotEmpty &&
@@ -60,7 +57,6 @@ class AuthViewmodel extends Notifier<AuthState> {
             fullName: fullName,
             email: email,
             profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
-            // phoneNumber: phone?.isNotEmpty == true ? phone : null,
           ),
           errorMessage: null,
         );
@@ -93,25 +89,22 @@ class AuthViewmodel extends Notifier<AuthState> {
     final params = RegisterUsecaseParams(
       fullName: fullName,
       email: email,
-
       password: password,
     );
 
     final result = await _registerUsecase(params);
 
     result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
-      (isRegistered) {
-        state = state.copyWith(
-          status: isRegistered ? AuthStatus.registered : AuthStatus.error,
-          errorMessage: isRegistered ? null : 'Registration failed',
-        );
-      },
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ),
+      (isRegistered) =>
+          state = state.copyWith(
+            status: isRegistered ? AuthStatus.registered : AuthStatus.error,
+            errorMessage: isRegistered ? null : 'Registration failed',
+          ),
     );
   }
 
@@ -123,16 +116,14 @@ class AuthViewmodel extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading);
 
     final params = LoginUsecaseParams(username: username, password: password);
-
     final result = await _loginUsecase(params);
 
     result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message,
-        );
-      },
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ),
       (authEntity) async {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -146,7 +137,6 @@ class AuthViewmodel extends Notifier<AuthState> {
           'user_profile_pic',
           authEntity.profilePicture ?? '',
         );
-        // await prefs.setString('user_phone', authEntity.phoneNumber ?? '');
       },
     );
   }
@@ -159,12 +149,11 @@ class AuthViewmodel extends Notifier<AuthState> {
     final result = await logoutUsecase();
 
     result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message ?? 'Failed to logout',
-        );
-      },
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Failed to logout',
+          ),
       (_) async {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -181,43 +170,89 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // ── NEW: Upload Photo ────────────────────────────────────────────────
+  // ── UPLOAD PHOTO ─────────────────────────────────────────────────────
+  // ✅ Now calls updateProfile after upload to persist on backend
   Future<void> uploadPhoto(File photo) async {
-    // Set loading state
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
-    final result = await _uploadPhotoUsecase(photo);
+    // Step 1: upload image → get filename
+    final uploadResult = await _uploadPhotoUsecase(photo);
 
-    result.fold(
-      (failure) {
-        state = state.copyWith(
-          status: AuthStatus.error,
-          errorMessage: failure.message ?? 'Failed to upload photo',
+    uploadResult.fold(
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Failed to upload photo',
+          ),
+      (imageName) async {
+        // Step 2: update profile with new image path
+        final updateResult = await _updateProfileUsecase(
+          AuthEntity(
+            localProfilePicturePath: photo.path, // ← only image sent ✅
+            // fullName/email/password = null → not sent → backend keeps old ✅
+          ),
+        );
+
+        updateResult.fold(
+          (failure) =>
+              state = state.copyWith(
+                status: AuthStatus.error,
+                errorMessage: failure.message ?? 'Failed to update profile',
+              ),
+          (_) async {
+            state = state.copyWith(
+              status: AuthStatus.authenticated,
+              uploadPhotoName: imageName,
+              authEntity: state.authEntity?.copyWith(
+                profilePicture: photo.path, // show locally immediately
+              ),
+            );
+
+            // Persist new profile pic locally
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('user_profile_pic', photo.path);
+          },
         );
       },
-      (imageName) {
-        // Success: update the auth entity with new profile picture URL
-        // final currentUser = state.authEntity;
+    );
+  }
 
-        // if (currentUser != null) {
-        //   final updatedUser = currentUser.copyWith(profilePicture: uploadedUrl);
+  // ── UPDATE TEXT FIELDS ONLY ───────────────────────────────────────────
+  Future<void> updateProfileInfo({
+    String? fullName,
+    String? email,
+    String? password,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
-        // Update state
+    final result = await _updateProfileUsecase(
+      AuthEntity(
+        fullName: fullName, // null = not sent = backend keeps old ✅
+        email: email, // null = not sent = backend keeps old ✅
+        password: password, // null = not sent = backend keeps old ✅
+      ),
+    );
+
+    result.fold(
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Update failed',
+          ),
+      (_) async {
         state = state.copyWith(
-          status: AuthStatus.loading, // or .success if you add it
-          uploadPhotoName: imageName,
+          status: AuthStatus.authenticated,
+          authEntity: state.authEntity?.copyWith(
+            // only overwrite what was actually provided ✅
+            fullName: fullName ?? state.authEntity?.fullName,
+            email: email ?? state.authEntity?.email,
+          ),
         );
 
-        // Persist the new profile picture URL
-        // final prefs = await SharedPreferences.getInstance();
-        // await prefs.setString('user_profile_pic', uploadedUrl);
-        // } else {
-        //   // Rare case: user not logged in → just show success but no update
-        //   state = state.copyWith(
-        //     status: AuthStatus.sucess, // add this status if needed
-        //     errorMessage: null,
-        //   );
-        // }
+        // Persist updated fields locally
+        final prefs = await SharedPreferences.getInstance();
+        if (fullName != null) await prefs.setString('user_fullname', fullName);
+        if (email != null) await prefs.setString('user_email', email);
       },
     );
   }

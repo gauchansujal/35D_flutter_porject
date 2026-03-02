@@ -1,48 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/utils/snackbar_utils.dart';
-
+import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
+import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
+import 'package:flutter_application_1/features/auth/presentation/widgets/profile_avatar_widget.dart';
+import 'package:flutter_application_1/features/auth/presentation/widgets/profile_field_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
-import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
-
-Future<bool> _userSangaPermissionLinuParcha(
-  BuildContext context,
-  Permission permission,
-) async {
-  final status = await permission.status;
-  if (status.isGranted) {
-    return true;
-  }
-  if (status.isDenied) {
-    final result = await permission.request();
-    return result.isGranted;
-  }
-  if (status.isPermanentlyDenied) {
-    _showPermissionDialog(context);
-    return false;
-  }
-  return false;
-}
-
-void _showPermissionDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder:
-        (context) => AlertDialog(
-          title: Text('premission denied'),
-          content: Text(
-            "yo features use gerna lai permission setting ma janu hola",
-          ),
-          actions: [
-            TextButton(onPressed: () {}, child: Text('cancle')),
-            TextButton(onPressed: () {}, child: Text('open settings')),
-          ],
-        ),
-  );
-}
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -52,263 +16,232 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  final List<XFile> _selectedmedia = [];
   final ImagePicker _imagePicker = ImagePicker();
+  File? _selectedImage;
 
-  Future<void> _cameraBataKhicha() async {
-    final hashPermission = await _userSangaPermissionLinuParcha(
-      context,
-      Permission.camera,
-    );
-    if (!hashPermission) return;
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-    final XFile? photo = await _imagePicker.pickImage(
-      source: ImageSource.camera,
+  bool _isEditing = false;
+  bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Pre-fill fields
+      final user = ref.read(authViewModelProvider).authEntity;
+      if (user != null) {
+        _fullNameController.text = user.fullName ?? '';
+        _emailController.text = user.email ?? '';
+      }
+
+      // Listen for state changes
+      ref.listenManual(authViewModelProvider, (previous, next) {
+        if (next.status == AuthStatus.error && next.errorMessage != null) {
+          SnackbarUtils.showError(context, next.errorMessage!);
+          ref.read(authViewModelProvider.notifier).clearError();
+        }
+        if (next.status == AuthStatus.authenticated &&
+            previous?.status == AuthStatus.loading) {
+          SnackbarUtils.showSuccess(context, 'Profile updated successfully!');
+          setState(() {
+            _selectedImage = null;
+            _isEditing = false;
+          });
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
       imageQuality: 80,
     );
-
-    if (photo != null) {
-      setState(() {
-        _selectedmedia.clear();
-        _selectedmedia.add(photo);
-      });
-      // upload image to server automatically
+    if (image != null) {
+      setState(() => _selectedImage = File(image.path));
       await ref
           .read(authViewModelProvider.notifier)
-          .uploadPhoto(File(photo.path));
+          .uploadPhoto(File(image.path));
     }
   }
 
-  Future<void> _pickFromGallery({bool allowMuiltiple = false}) async {
-    try {
-      if (allowMuiltiple) {
-        final List<XFile>? images = await _imagePicker.pickMultiImage(
-          imageQuality: 80,
+  Future<void> _saveProfile() async {
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    await ref.read(authViewModelProvider.notifier).updateProfileInfo(
+          fullName: fullName.isNotEmpty ? fullName : null,
+          email: email.isNotEmpty ? email : null,
+          password: password.isNotEmpty ? password : null,
         );
-        if (images != null && images.isNotEmpty) {
-          setState(() {
-            _selectedmedia.clear();
-            _selectedmedia.addAll(images);
-          });
-          // If you want to upload multiple → loop here
-          // For now uploading only first one (as before)
-          await ref
-              .read(authViewModelProvider.notifier)
-              .uploadPhoto(File(images.first.path));
-        }
-      } else {
-        final XFile? image = await _imagePicker.pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-        );
-        if (image != null) {
-          setState(() {
-            _selectedmedia.clear();
-            _selectedmedia.add(image);
-          });
-          // upload image to server automatically
-          await ref
-              .read(authViewModelProvider.notifier)
-              .uploadPhoto(File(image.path));
-        }
-      }
-    } catch (e) {
-      debugPrint('gallery error: $e');
-      SnackbarUtils.showError(context, 'Failed to pick image from gallery');
-    }
+  }
+
+  void _cancelEdit(user) {
+    _fullNameController.text = user.fullName ?? '';
+    _emailController.text = user.email ?? '';
+    _passwordController.clear();
+    setState(() => _isEditing = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final authState = ref.watch(authViewModelProvider);
+    final authState = ref.watch(authViewModelProvider);
 
-        if (authState.status == AuthStatus.loading ||
-            authState.status == AuthStatus.initial) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    // ── Loading ────────────────────────────────────────────────────────
+    if (authState.status == AuthStatus.loading ||
+        authState.status == AuthStatus.initial) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Loading...',
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── Not logged in ──────────────────────────────────────────────────
+    if (authState.status != AuthStatus.authenticated ||
+        authState.authEntity == null) {
+      return const Center(
+        child: Text(
+          'Not logged in',
+          style: TextStyle(color: Colors.redAccent, fontSize: 20),
+        ),
+      );
+    }
+
+    final user = authState.authEntity!;
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+
+            // ── Avatar ───────────────────────────────────────────────
+            ProfileAvatarWidget(
+              selectedImage: _selectedImage,
+              networkImageUrl: user.profilePicture,
+              onTap: _pickImage,
+            ),
+
+            const SizedBox(height: 32),
+
+            // ── Header Row ───────────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 24),
-                Text(
-                  'Loading profile...',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                const Text(
+                  'Profile Info',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () =>
+                      _isEditing ? _saveProfile() : setState(() => _isEditing = true),
+                  icon: Icon(
+                    _isEditing ? Icons.save : Icons.edit,
+                    color: Colors.blue.shade300,
+                  ),
+                  label: Text(
+                    _isEditing ? 'Save' : 'Edit',
+                    style: TextStyle(color: Colors.blue.shade300),
+                  ),
                 ),
               ],
             ),
-          );
-        }
 
-        if (authState.status == AuthStatus.error) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.redAccent,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    authState.errorMessage ?? 'Something went wrong',
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+            const SizedBox(height: 16),
+
+            // ── Full Name ────────────────────────────────────────────
+            ProfileFieldWidget(
+              label: 'Full Name',
+              controller: _fullNameController,
+              icon: Icons.person_outline,
+              enabled: _isEditing,
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Email ────────────────────────────────────────────────
+            ProfileFieldWidget(
+              label: 'Email',
+              controller: _emailController,
+              icon: Icons.email_outlined,
+              enabled: _isEditing,
+              keyboardType: TextInputType.emailAddress,
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Password ─────────────────────────────────────────────
+            ProfileFieldWidget(
+              label: 'New Password',
+              controller: _passwordController,
+              icon: Icons.lock_outline,
+              enabled: _isEditing,
+              obscureText: _obscurePassword,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white54,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
             ),
-          );
-        }
 
-        if (authState.status != AuthStatus.authenticated ||
-            authState.authEntity == null) {
-          return const Center(
-            child: Text(
-              'Not logged in',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+            const SizedBox(height: 16),
+
+            // ── User ID (read-only) ──────────────────────────────────
+            ProfileFieldWidget(
+              label: 'User ID',
+              controller: TextEditingController(text: user.userId ?? '-'),
+              icon: Icons.badge_outlined,
+              enabled: false,
             ),
-          );
-        }
 
-        final user = authState.authEntity!;
+            const SizedBox(height: 32),
 
-        return SafeArea(
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.blue.shade700,
-                      child:
-                          _selectedmedia.isNotEmpty
-                              ? ClipOval(
-                                child: Image.file(
-                                  File(_selectedmedia.first.path),
-                                  fit: BoxFit.cover,
-                                  width: 140,
-                                  height: 140,
-                                  errorBuilder:
-                                      (context, error, stack) => const Icon(
-                                        Icons.error,
-                                        color: Colors.red,
-                                        size: 50,
-                                      ),
-                                ),
-                              )
-                              : (user.profilePicture != null &&
-                                  user.profilePicture!.trim().isNotEmpty)
-                              ? ClipOval(
-                                child: Image.network(
-                                  user.profilePicture!,
-                                  fit: BoxFit.cover,
-                                  width: 140,
-                                  height: 140,
-                                  loadingBuilder: (
-                                    context,
-                                    child,
-                                    loadingProgress,
-                                  ) {
-                                    if (loadingProgress == null) return child;
-                                    return const CircularProgressIndicator();
-                                  },
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                          const Icon(
-                                            Icons.person,
-                                            size: 70,
-                                            color: Colors.white,
-                                          ),
-                                ),
-                              )
-                              : const Icon(
-                                Icons.person,
-                                size: 70,
-                                color: Colors.white,
-                              ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      user.fullName ?? '',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 40),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _pickFromGallery,
-                          icon: const Icon(Icons.photo_camera),
-                          label: const Text("Upload Photo"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        ElevatedButton.icon(
-                          onPressed: _cameraBataKhicha,
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text("Take Photo"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement video upload
-                          },
-                          icon: const Icon(Icons.videocam),
-                          label: const Text("Upload Video"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.shade700,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            // ── Cancel Button ────────────────────────────────────────
+            if (_isEditing)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => _cancelEdit(user),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white30),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Cancel'),
                 ),
               ),
-            ],
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }

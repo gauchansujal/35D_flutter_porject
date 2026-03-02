@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/core/sensors/sensor_dashboard_page.dart';
+import 'package:flutter_application_1/core/sensors/sensor_wraper.dart';
+import 'package:flutter_application_1/core/sensors/sensors_riverpod_provider.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
 import 'package:flutter_application_1/shared_perf/shared_perf.dart';
 
@@ -57,21 +60,24 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(sensorProvider);
     return MaterialApp(
       title: 'Bike-Rental',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      builder:(context, child) => SensorWrapper(child: child!),
       home: const SplashPage(),
       routes: {
         '/login': (_) => LoginPages(),
         '/onboarding': (_) => OnboardingPages(),
         '/signup': (_) => SignupPage(),
         '/dashboard': (_) => DashboardScreen(),
+        '/sensors': (_) => const SensorDashboardPage(),
       },
     );
   }

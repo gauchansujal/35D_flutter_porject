@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_application_1/features/auth/data/models/auth_api_model.dart';
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
+import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
 
 abstract interface class IAuthLocalDatasource {
   Future<bool> register(AuthHiveModel model);
@@ -21,6 +22,8 @@ abstract interface class IAuthRemoteDataSource {
   Future<AuthApiModel> register(AuthApiModel user);
   Future<AuthApiModel?> login(String email, String password);
   Future<AuthApiModel?> getUserById(String authId);
+  Future<void> updateProfile(AuthEntity profile);
+  
 
   /// Uploads profile image and returns the public URL from server
   Future<String?> uploadProfileImage(File image);

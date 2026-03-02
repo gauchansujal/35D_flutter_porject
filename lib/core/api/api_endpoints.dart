@@ -10,8 +10,8 @@ class ApiEndpoints {
   // For Android Emulator use: 'http://10.0.2.2:5000/api/'
   // For iOS Simulator use: 'http://localhost:5000/api/'
   // For Physical Device use your computer's IP: 'http://192.168.x.x:5000/api/'
-  static const bool isPhysicalDevice = false;
-  static const String compIpAdress = "";
+  static const bool isPhysicalDevice = true;
+  static const String compIpAdress = "192.168.1.95";
 
   static String get baseUrl {
     if (isPhysicalDevice) {
@@ -47,6 +47,7 @@ class ApiEndpoints {
   static String studentById(String id) => '/auth/$id';
   static String studentPhoto(String id) => '/auth/$id/photo';
   static String uploadProfileImage = '/auth/update-profile';
+  static String StudentUpdateProfile = '/auth/update-profile';
 
   // ============ bike Endpoints ============
   static const String bike = '/bike';

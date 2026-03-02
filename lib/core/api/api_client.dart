@@ -156,7 +156,7 @@ class _AuthInterceptor extends Interceptor {
 
     if (!isPublicGet && !isAuthEndpoint) {
       final token = await _tokenServices.getToken();
-      print('🔑 INTERCEPTOR TOKEN: $token'); // remove after confirmed working
+      // print('🔑 INTERCEPTOR TOKEN: $token'); // remove after confirmed working
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
