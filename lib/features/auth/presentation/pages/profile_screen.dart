@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/utils/snackbar_utils.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
@@ -21,45 +22,50 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
 
   bool _isEditing = false;
-  bool _obscurePassword = true;
+
+  static const String _baseUrl = 'http://10.0.2.2:5000';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Pre-fill fields
-      final user = ref.read(authViewModelProvider).authEntity;
-      if (user != null) {
-        _fullNameController.text = user.fullName ?? '';
-        _emailController.text = user.email ?? '';
-      }
+      _prefillFields();
 
-      // Listen for state changes
       ref.listenManual(authViewModelProvider, (previous, next) {
+        if (!mounted) return;
+
         if (next.status == AuthStatus.error && next.errorMessage != null) {
           SnackbarUtils.showError(context, next.errorMessage!);
           ref.read(authViewModelProvider.notifier).clearError();
         }
-        if (next.status == AuthStatus.authenticated &&
-            previous?.status == AuthStatus.loading) {
+
+        if (previous?.status == AuthStatus.loading &&
+            next.status == AuthStatus.authenticated) {
           SnackbarUtils.showSuccess(context, 'Profile updated successfully!');
           setState(() {
             _selectedImage = null;
             _isEditing = false;
           });
+          _prefillFields();
         }
       });
     });
+  }
+
+  void _prefillFields() {
+    final user = ref.read(authViewModelProvider).authEntity;
+    if (user != null) {
+      _fullNameController.text = user.fullName ?? '';
+      _emailController.text = user.email ?? '';
+    }
   }
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -79,19 +85,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _saveProfile() async {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
 
-    await ref.read(authViewModelProvider.notifier).updateProfileInfo(
-          fullName: fullName.isNotEmpty ? fullName : null,
-          email: email.isNotEmpty ? email : null,
-          password: password.isNotEmpty ? password : null,
-        );
+    final user = ref.read(authViewModelProvider).authEntity;
+
+    // Only send fields that actually changed
+    final newFullName = fullName != (user?.fullName ?? '') ? fullName : null;
+    final newEmail = email != (user?.email ?? '') ? email : null;
+
+    // Nothing changed — just exit edit mode
+    if (newFullName == null && newEmail == null) {
+      setState(() => _isEditing = false);
+      return;
+    }
+
+    await ref
+        .read(authViewModelProvider.notifier)
+        .updateProfileInfo(fullName: newFullName, email: newEmail);
   }
 
-  void _cancelEdit(user) {
-    _fullNameController.text = user.fullName ?? '';
-    _emailController.text = user.email ?? '';
-    _passwordController.clear();
+  void _cancelEdit() {
+    _prefillFields();
     setState(() => _isEditing = false);
   }
 
@@ -99,7 +112,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
 
-    // ── Loading ────────────────────────────────────────────────────────
+    // ── Loading ──────────────────────────────────────────────────────────
     if (authState.status == AuthStatus.loading ||
         authState.status == AuthStatus.initial) {
       return const Center(
@@ -117,7 +130,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
     }
 
-    // ── Not logged in ──────────────────────────────────────────────────
+    // ── Not logged in ────────────────────────────────────────────────────
     if (authState.status != AuthStatus.authenticated ||
         authState.authEntity == null) {
       return const Center(
@@ -130,23 +143,80 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     final user = authState.authEntity!;
 
+    // ✅ Build full image URL from server path
+    final profilePicPath = user.profilePicture;
+    final fullImageUrl =
+        (profilePicPath != null && profilePicPath.isNotEmpty)
+            ? '$_baseUrl$profilePicPath'
+            : null;
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // ── Avatar ─────────────────────────────────────────────────
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.blue.shade700,
+                  backgroundImage:
+                      _selectedImage != null
+                          ? FileImage(_selectedImage!) as ImageProvider
+                          : fullImageUrl != null
+                          ? NetworkImage(fullImageUrl)
+                          : null,
+                  child:
+                      (_selectedImage == null && fullImageUrl == null)
+                          ? const Icon(
+                            Icons.person,
+                            size: 55,
+                            color: Colors.white,
+                          )
+                          : null,
+                ),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade400,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
-            // ── Avatar ───────────────────────────────────────────────
-            ProfileAvatarWidget(
-              selectedImage: _selectedImage,
-              networkImageUrl: user.profilePicture,
-              onTap: _pickImage,
+            const SizedBox(height: 12),
+
+            // ── Name + email under avatar ───────────────────────────────
+            Text(
+              user.fullName?.isNotEmpty == true ? user.fullName! : 'User',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              user.email ?? '',
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
 
             const SizedBox(height: 32),
 
-            // ── Header Row ───────────────────────────────────────────
+            // ── Header Row ──────────────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -159,8 +229,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () =>
-                      _isEditing ? _saveProfile() : setState(() => _isEditing = true),
+                  onPressed:
+                      authState.status == AuthStatus.loading
+                          ? null
+                          : () =>
+                              _isEditing
+                                  ? _saveProfile()
+                                  : setState(() => _isEditing = true),
                   icon: Icon(
                     _isEditing ? Icons.save : Icons.edit,
                     color: Colors.blue.shade300,
@@ -175,7 +250,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
             const SizedBox(height: 16),
 
-            // ── Full Name ────────────────────────────────────────────
+            // ── Full Name ───────────────────────────────────────────────
             ProfileFieldWidget(
               label: 'Full Name',
               controller: _fullNameController,
@@ -185,7 +260,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
             const SizedBox(height: 16),
 
-            // ── Email ────────────────────────────────────────────────
+            // ── Email ───────────────────────────────────────────────────
             ProfileFieldWidget(
               label: 'Email',
               controller: _emailController,
@@ -194,51 +269,46 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               keyboardType: TextInputType.emailAddress,
             ),
 
-            const SizedBox(height: 16),
-
-            // ── Password ─────────────────────────────────────────────
-            ProfileFieldWidget(
-              label: 'New Password',
-              controller: _passwordController,
-              icon: Icons.lock_outline,
-              enabled: _isEditing,
-              obscureText: _obscurePassword,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white54,
-                ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // ── User ID (read-only) ──────────────────────────────────
-            ProfileFieldWidget(
-              label: 'User ID',
-              controller: TextEditingController(text: user.userId ?? '-'),
-              icon: Icons.badge_outlined,
-              enabled: false,
-            ),
-
             const SizedBox(height: 32),
 
-            // ── Cancel Button ────────────────────────────────────────
-            if (_isEditing)
+            // ── Action Buttons ──────────────────────────────────────────
+            if (_isEditing) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed:
+                      authState.status == AuthStatus.loading
+                          ? null
+                          : _saveProfile,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Save Changes'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => _cancelEdit(user),
+                  onPressed: _cancelEdit,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
                     side: const BorderSide(color: Colors.white30),
                     padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),
               ),
+            ],
           ],
         ),
       ),

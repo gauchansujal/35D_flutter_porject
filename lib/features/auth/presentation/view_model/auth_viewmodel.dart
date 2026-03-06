@@ -6,7 +6,7 @@ import 'package:flutter_application_1/features/auth/domain/usecases/login_usecas
 import 'package:flutter_application_1/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/register_usecase.dart';
 import 'package:flutter_application_1/features/auth/domain/usecases/uplode_photo_usecase.dart';
-import 'package:flutter_application_1/features/auth/domain/usecases/update_profile_usecase.dart'; // ✅ new
+import 'package:flutter_application_1/features/auth/domain/usecases/update_profile_usecase.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,14 +19,14 @@ class AuthViewmodel extends Notifier<AuthState> {
   late final RegisterUsecase _registerUsecase;
   late final LoginUsecase _loginUsecase;
   late final UplodePhotoUsecase _uploadPhotoUsecase;
-  late final UpdateProfileUsecase _updateProfileUsecase; // ✅ new
+  late final UpdateProfileUsecase _updateProfileUsecase;
 
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(LoginUsecaseProvider);
     _uploadPhotoUsecase = ref.read(UplodePhotoUsecaseProvider);
-    _updateProfileUsecase = ref.read(updateProfileUsecaseProvider); // ✅ new
+    _updateProfileUsecase = ref.read(updateProfileUsecaseProvider);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryRestoreSession();
@@ -43,17 +43,16 @@ class AuthViewmodel extends Notifier<AuthState> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
+      final userId = prefs.getString('user_id')?.trim(); // ✅ ADDED
       final fullName = prefs.getString('user_fullname')?.trim();
       final email = prefs.getString('user_email')?.trim();
       final profilePic = prefs.getString('user_profile_pic')?.trim();
 
-      if (fullName != null &&
-          fullName.isNotEmpty &&
-          email != null &&
-          email.isNotEmpty) {
+      if (email != null && email.isNotEmpty) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: AuthEntity(
+            userId: userId, // ✅ ADDED
             fullName: fullName,
             email: email,
             profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
@@ -75,7 +74,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     }
   }
 
-  // REGISTER (unchanged)
+  // REGISTER
   Future<void> register({
     required String fullName,
     required String email,
@@ -108,7 +107,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // LOGIN (unchanged)
+  // LOGIN
   Future<void> login({
     required String username,
     required String password,
@@ -131,6 +130,7 @@ class AuthViewmodel extends Notifier<AuthState> {
         );
 
         final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', authEntity.userId ?? ''); // ✅ ADDED
         await prefs.setString('user_fullname', authEntity.fullName ?? '');
         await prefs.setString('user_email', authEntity.email ?? '');
         await prefs.setString(
@@ -141,7 +141,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // LOGOUT (unchanged)
+  // LOGOUT
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
@@ -162,6 +162,7 @@ class AuthViewmodel extends Notifier<AuthState> {
         );
 
         final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('user_id'); // ✅ ADDED
         await prefs.remove('user_fullname');
         await prefs.remove('user_email');
         await prefs.remove('user_profile_pic');
@@ -170,12 +171,10 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // ── UPLOAD PHOTO ─────────────────────────────────────────────────────
-  // ✅ Now calls updateProfile after upload to persist on backend
+  // UPLOAD PHOTO
   Future<void> uploadPhoto(File photo) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
-    // Step 1: upload image → get filename
     final uploadResult = await _uploadPhotoUsecase(photo);
 
     uploadResult.fold(
@@ -185,12 +184,8 @@ class AuthViewmodel extends Notifier<AuthState> {
             errorMessage: failure.message ?? 'Failed to upload photo',
           ),
       (imageName) async {
-        // Step 2: update profile with new image path
         final updateResult = await _updateProfileUsecase(
-          AuthEntity(
-            localProfilePicturePath: photo.path, // ← only image sent ✅
-            // fullName/email/password = null → not sent → backend keeps old ✅
-          ),
+          AuthEntity(localProfilePicturePath: photo.path),
         );
 
         updateResult.fold(
@@ -204,11 +199,10 @@ class AuthViewmodel extends Notifier<AuthState> {
               status: AuthStatus.authenticated,
               uploadPhotoName: imageName,
               authEntity: state.authEntity?.copyWith(
-                profilePicture: photo.path, // show locally immediately
+                profilePicture: photo.path,
               ),
             );
 
-            // Persist new profile pic locally
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('user_profile_pic', photo.path);
           },
@@ -217,7 +211,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
-  // ── UPDATE TEXT FIELDS ONLY ───────────────────────────────────────────
+  // UPDATE TEXT FIELDS
   Future<void> updateProfileInfo({
     String? fullName,
     String? email,
@@ -226,11 +220,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
     final result = await _updateProfileUsecase(
-      AuthEntity(
-        fullName: fullName, // null = not sent = backend keeps old ✅
-        email: email, // null = not sent = backend keeps old ✅
-        password: password, // null = not sent = backend keeps old ✅
-      ),
+      AuthEntity(fullName: fullName, email: email, password: password),
     );
 
     result.fold(
@@ -243,13 +233,11 @@ class AuthViewmodel extends Notifier<AuthState> {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: state.authEntity?.copyWith(
-            // only overwrite what was actually provided ✅
             fullName: fullName ?? state.authEntity?.fullName,
             email: email ?? state.authEntity?.email,
           ),
         );
 
-        // Persist updated fields locally
         final prefs = await SharedPreferences.getInstance();
         if (fullName != null) await prefs.setString('user_fullname', fullName);
         if (email != null) await prefs.setString('user_email', email);

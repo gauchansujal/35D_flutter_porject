@@ -148,7 +148,7 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
 
     // ✅ Only add fields that are NOT null — backend keeps old value for rest
     if (profile.fullName != null && profile.fullName!.trim().isNotEmpty) {
-      fields['fullName'] = profile.fullName;
+      fields['username'] = profile.fullName;
     }
     if (profile.email != null && profile.email!.trim().isNotEmpty) {
       fields['email'] = profile.email;

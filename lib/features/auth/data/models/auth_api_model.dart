@@ -37,10 +37,12 @@ class AuthApiModel {
   // fromJson
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {
     return AuthApiModel(
-      
       userid: json['id'] as String?,
-      fullname: '${json['firstname'] ?? ''} ${json['lastname'] ?? ''}'.trim(),
-
+      fullname: () {
+        final name =
+            '${json['firstname'] ?? ''} ${json['lastname'] ?? ''}'.trim();
+        return name.isNotEmpty ? name : (json['username'] as String? ?? '');
+      }(),
       email: json['email'] as String,
       // phoneNumber: json['phoneNumber'] as String,
       // username: json['username'] as String,
