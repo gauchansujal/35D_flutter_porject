@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/features/auth/presentation/pages/profile_screen.dart';
-import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/pages/setting_screen.dart';
-import 'package:flutter_application_1/features/dashboard/persentation/widgets/bike_search.dart';
 import 'package:flutter_application_1/core/widgets/header_widget.dart';
 import 'package:flutter_application_1/features/dashboard/persentation/widgets/quick_access.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -63,7 +60,6 @@ class HomePage extends StatelessWidget {
           SizedBox(height: 20),
           QuickAccess(),
           SizedBox(height: 20),
-          BikeSearch(),
           SizedBox(height: 20),
         ],
       ),

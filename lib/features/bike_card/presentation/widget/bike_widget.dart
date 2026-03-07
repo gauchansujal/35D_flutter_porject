@@ -6,7 +6,6 @@ import 'package:flutter_application_1/features/bike_card/domain/entites/bike_ent
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BikeCard extends ConsumerWidget {
-  // ← ConsumerWidget to access ref
   final BikeEntity bike;
   final VoidCallback? onTap;
 
@@ -14,9 +13,6 @@ class BikeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ← WidgetRef ref
-
-    // Listen to booking state for loading/error/success
     ref.listen<BookingState>(bookingViewModelProvider, (previous, next) {
       if (next.status == BookingStatus.success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,9 +83,9 @@ class BikeCard extends ConsumerWidget {
                                   ),
                                 );
                               },
-                              errorBuilder: (context, error, stackTrace) {
-                                return _placeholder();
-                              },
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      _placeholder(),
                             )
                             : _placeholder(),
                   ),
@@ -213,7 +209,10 @@ class BikeCard extends ConsumerWidget {
                       ),
                       onPressed:
                           bike.isAvailable && !isBooking
-                              ? () => _onBookNow(context, ref)
+                              ? () => _showBookingSheet(
+                                context,
+                                ref,
+                              ) // ✅ show date picker
                               : null,
                       child:
                           isBooking
@@ -244,15 +243,233 @@ class BikeCard extends ConsumerWidget {
     );
   }
 
-  // ── Book Now Handler ──────────────────────────────────────────────────────
-  void _onBookNow(BuildContext context, WidgetRef ref) {
-    final booking = BookingEnitities(
-      bikeId: bike.id,
-      bookingDate: DateTime.now(),
-      returnDate: DateTime.now().add(const Duration(hours: 1)), // default 1hr
-    );
+  // ── Date Picker Bottom Sheet ──────────────────────────────────────────────
+  void _showBookingSheet(BuildContext context, WidgetRef ref) {
+    DateTime? bookingDate;
+    DateTime? returnDate;
 
-    ref.read(bookingViewModelProvider.notifier).createBooking(booking);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1C1E2A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final canBook = bookingDate != null && returnDate != null;
+            final days =
+                canBook ? returnDate!.difference(bookingDate!).inDays : 0;
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Book ${bike.name}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    bike.price,
+                    style: const TextStyle(
+                      color: Color(0xFFE91E8C),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // ── Booking Date ──────────────────────────────────
+                  const Text(
+                    'Booking Date',
+                    style: TextStyle(color: Color(0xFF8A8FA8), fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder:
+                            (context, child) => Theme(
+                              data: ThemeData.dark().copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Color(0xFFE91E8C),
+                                  surface: Color(0xFF1C1E2A),
+                                ),
+                              ),
+                              child: child!,
+                            ),
+                      );
+                      if (picked != null) {
+                        setSheetState(() {
+                          bookingDate = picked;
+                          // reset returnDate if before bookingDate
+                          if (returnDate != null &&
+                              returnDate!.isBefore(picked)) {
+                            returnDate = null;
+                          }
+                        });
+                      }
+                    },
+                    child: _DateField(
+                      date: bookingDate,
+                      hint: 'Select start date',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Return Date ───────────────────────────────────
+                  const Text(
+                    'Return Date',
+                    style: TextStyle(color: Color(0xFF8A8FA8), fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate:
+                            bookingDate != null
+                                ? bookingDate!.add(const Duration(days: 1))
+                                : DateTime.now().add(const Duration(days: 1)),
+                        firstDate:
+                            bookingDate != null
+                                ? bookingDate!.add(const Duration(days: 1))
+                                : DateTime.now().add(const Duration(days: 1)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder:
+                            (context, child) => Theme(
+                              data: ThemeData.dark().copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Color(0xFFE91E8C),
+                                  surface: Color(0xFF1C1E2A),
+                                ),
+                              ),
+                              child: child!,
+                            ),
+                      );
+                      if (picked != null) {
+                        setSheetState(() => returnDate = picked);
+                      }
+                    },
+                    child: _DateField(
+                      date: returnDate,
+                      hint: 'Select return date',
+                    ),
+                  ),
+
+                  // ── Summary ───────────────────────────────────────
+                  if (canBook && days > 0) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2D3E),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '$days day${days > 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            _totalPrice(days),
+                            style: const TextStyle(
+                              color: Color(0xFFE91E8C),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  // ── Confirm Button ────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            canBook ? const Color(0xFFE91E8C) : Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      onPressed:
+                          canBook
+                              ? () {
+                                Navigator.pop(context);
+                                final booking = BookingEnitities(
+                                  bikeId: bike.id,
+                                  bookingDate: bookingDate!,
+                                  returnDate: returnDate!,
+                                );
+                                ref
+                                    .read(bookingViewModelProvider.notifier)
+                                    .createBooking(booking);
+                              }
+                              : null,
+                      child: const Text(
+                        'Confirm Booking',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _totalPrice(int days) {
+    final clean = bike.price.replaceAll(RegExp(r'[^0-9]'), '');
+    final hourly = int.tryParse(clean) ?? 0;
+    return '\$${hourly * 8 * days}';
   }
 
   String _calculatePerDay(String hourlyPrice) {
@@ -267,6 +484,44 @@ class BikeCard extends ConsumerWidget {
       width: double.infinity,
       color: const Color(0xFF2A2D3E),
       child: const Icon(Icons.two_wheeler, size: 72, color: Color(0xFF3A3D4E)),
+    );
+  }
+}
+
+// ── Date Field Widget ─────────────────────────────────────────────────────────
+class _DateField extends StatelessWidget {
+  final DateTime? date;
+  final String hint;
+
+  const _DateField({required this.date, required this.hint});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2D3E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color:
+              date != null
+                  ? const Color(0xFFE91E8C).withOpacity(0.5)
+                  : Colors.white12,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.calendar_today, color: Color(0xFFE91E8C), size: 18),
+          const SizedBox(width: 12),
+          Text(
+            date != null ? '${date!.day}/${date!.month}/${date!.year}' : hint,
+            style: TextStyle(
+              color: date != null ? Colors.white : const Color(0xFF8A8FA8),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

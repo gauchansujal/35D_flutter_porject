@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_application_1/core/api/api_client.dart' as _dio;
 import 'package:flutter_application_1/core/api/api_endpoints.dart';
 import 'package:flutter_application_1/core/services/storage/token_services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,6 +132,20 @@ class ApiClient {
       data: formData,
       options: options,
       onSendProgress: onSendProgress,
+    );
+  }
+
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
     );
   }
 }

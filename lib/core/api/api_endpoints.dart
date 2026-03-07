@@ -55,6 +55,11 @@ class ApiEndpoints {
   static String itemClaim(String id) => '/items/$id/claim';
 
   static String itemUplodeVideo = '/auth/uplode-video';
+  // ============ Notification Endpoints ============
+  static const String notification = '/notification';
+  static String notificationMarkRead(String id) => '/notification/$id/read';
+  static const String notificationReadAll = '/notification/read-all';
+  static const String notificationUnreadCount = '/notification/unread-count';
 
   // ============ booking Endpoints ============
   static const String booking = '/booking';
