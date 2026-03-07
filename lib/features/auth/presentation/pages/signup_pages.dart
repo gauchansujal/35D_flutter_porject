@@ -325,8 +325,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value?.trim().isEmpty ?? true)
+                    if (value?.trim().isEmpty ?? true) {
                       return 'Email is required';
+                    }
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     ).hasMatch(value!)) {

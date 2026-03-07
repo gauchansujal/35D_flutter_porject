@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/core/services/connectivity/network_info.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';

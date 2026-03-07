@@ -43,7 +43,7 @@ class AuthViewmodel extends Notifier<AuthState> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final userId = prefs.getString('user_id')?.trim(); // ✅ ADDED
+      final userId = prefs.getString('user_id')?.trim();
       final fullName = prefs.getString('user_fullname')?.trim();
       final email = prefs.getString('user_email')?.trim();
       final profilePic = prefs.getString('user_profile_pic')?.trim();
@@ -52,18 +52,18 @@ class AuthViewmodel extends Notifier<AuthState> {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: AuthEntity(
-            userId: userId, // ✅ ADDED
+            userId: userId,
             fullName: fullName,
             email: email,
             profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
           ),
-          errorMessage: null,
+          clearErrorMessage: true,
         );
       } else {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
-          authEntity: null,
-          errorMessage: null,
+          clearAuthEntity: true,
+          clearErrorMessage: true,
         );
       }
     } catch (e) {
@@ -94,16 +94,15 @@ class AuthViewmodel extends Notifier<AuthState> {
     final result = await _registerUsecase(params);
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message,
-          ),
-      (isRegistered) =>
-          state = state.copyWith(
-            status: isRegistered ? AuthStatus.registered : AuthStatus.error,
-            errorMessage: isRegistered ? null : 'Registration failed',
-          ),
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      ),
+      (isRegistered) => state = state.copyWith(
+        status: isRegistered ? AuthStatus.registered : AuthStatus.error,
+        errorMessage: isRegistered ? null : 'Registration failed',
+        clearErrorMessage: isRegistered,
+      ),
     );
   }
 
@@ -118,51 +117,51 @@ class AuthViewmodel extends Notifier<AuthState> {
     final result = await _loginUsecase(params);
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message,
-          ),
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      ),
       (authEntity) async {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: authEntity,
+          clearErrorMessage: true,
         );
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_id', authEntity.userId ?? ''); // ✅ ADDED
+        await prefs.setString('user_id', authEntity.userId ?? '');
         await prefs.setString('user_fullname', authEntity.fullName ?? '');
         await prefs.setString('user_email', authEntity.email ?? '');
         await prefs.setString(
-          'user_profile_pic',
-          authEntity.profilePicture ?? '',
-        );
+            'user_profile_pic', authEntity.profilePicture ?? '');
       },
     );
   }
 
   // LOGOUT
   Future<void> logout() async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      clearErrorMessage: true,
+    );
 
     final logoutUsecase = ref.read(logoutUsecaseProvider);
     final result = await logoutUsecase();
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message ?? 'Failed to logout',
-          ),
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message ?? 'Failed to logout',
+      ),
       (_) async {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
-          authEntity: null,
-          errorMessage: null,
+          clearAuthEntity: true,
+          clearErrorMessage: true,
         );
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('user_id'); // ✅ ADDED
+        await prefs.remove('user_id');
         await prefs.remove('user_fullname');
         await prefs.remove('user_email');
         await prefs.remove('user_profile_pic');
@@ -173,27 +172,28 @@ class AuthViewmodel extends Notifier<AuthState> {
 
   // UPLOAD PHOTO
   Future<void> uploadPhoto(File photo) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      clearErrorMessage: true,
+    );
 
     final uploadResult = await _uploadPhotoUsecase(photo);
 
     uploadResult.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message ?? 'Failed to upload photo',
-          ),
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message ?? 'Failed to upload photo',
+      ),
       (imageName) async {
         final updateResult = await _updateProfileUsecase(
           AuthEntity(localProfilePicturePath: photo.path),
         );
 
         updateResult.fold(
-          (failure) =>
-              state = state.copyWith(
-                status: AuthStatus.error,
-                errorMessage: failure.message ?? 'Failed to update profile',
-              ),
+          (failure) => state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Failed to update profile',
+          ),
           (_) async {
             state = state.copyWith(
               status: AuthStatus.authenticated,
@@ -201,6 +201,7 @@ class AuthViewmodel extends Notifier<AuthState> {
               authEntity: state.authEntity?.copyWith(
                 profilePicture: photo.path,
               ),
+              clearErrorMessage: true,
             );
 
             final prefs = await SharedPreferences.getInstance();
@@ -217,18 +218,20 @@ class AuthViewmodel extends Notifier<AuthState> {
     String? email,
     String? password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    state = state.copyWith(
+      status: AuthStatus.loading,
+      clearErrorMessage: true,
+    );
 
     final result = await _updateProfileUsecase(
       AuthEntity(fullName: fullName, email: email, password: password),
     );
 
     result.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message ?? 'Update failed',
-          ),
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message ?? 'Update failed',
+      ),
       (_) async {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -236,6 +239,7 @@ class AuthViewmodel extends Notifier<AuthState> {
             fullName: fullName ?? state.authEntity?.fullName,
             email: email ?? state.authEntity?.email,
           ),
+          clearErrorMessage: true,
         );
 
         final prefs = await SharedPreferences.getInstance();
@@ -245,11 +249,16 @@ class AuthViewmodel extends Notifier<AuthState> {
     );
   }
 
+  // FIX: use clearErrorMessage: true instead of errorMessage: null
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith(clearErrorMessage: true);
   }
 
   void updateUser(AuthEntity? updatedUser) {
-    state = state.copyWith(authEntity: updatedUser);
+    if (updatedUser == null) {
+      state = state.copyWith(clearAuthEntity: true);
+    } else {
+      state = state.copyWith(authEntity: updatedUser);
+    }
   }
 }

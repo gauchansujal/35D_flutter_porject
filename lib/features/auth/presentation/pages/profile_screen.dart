@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/utils/snackbar_utils.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:flutter_application_1/features/auth/presentation/widgets/profile_avatar_widget.dart';
 import 'package:flutter_application_1/features/auth/presentation/widgets/profile_field_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';

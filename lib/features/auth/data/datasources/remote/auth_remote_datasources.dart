@@ -37,7 +37,7 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
   @override
   Future<AuthApiModel?> getUserById(String authId) async {
     final response = await _apiClient.get(
-      '${ApiEndpoints.studentById(authId)}',
+      ApiEndpoints.studentById(authId),
     );
 
     if (response.data['success'] == true) {
@@ -130,7 +130,7 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
     final token = await _tokenServices.getToken(); // ✅ await
     final response = await _apiClient.uploadFile(
       // ✅ put not uploadFile
-      ApiEndpoints.studentRegister,
+      ApiEndpoints.uploadProfileImage,
       formData: formData, // ✅ data not formData
       options: Options(
         headers: {

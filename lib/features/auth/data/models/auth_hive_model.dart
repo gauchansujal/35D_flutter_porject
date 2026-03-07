@@ -123,5 +123,5 @@ class AuthHiveModel extends HiveObject {
     return 'AuthHiveModel(authId: $authId, fullName: $fullName, email: $email, )';
   }
 
-  static fromApiModel(AuthApiModel user) {}
+  static void fromApiModel(AuthApiModel user) {}
 }

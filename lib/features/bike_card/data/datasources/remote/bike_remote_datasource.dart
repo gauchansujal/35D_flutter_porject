@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_application_1/core/api/api_client.dart';
 import 'package:flutter_application_1/features/bike_card/data/datasources/bike_datasource.dart';
 import 'package:flutter_application_1/features/bike_card/data/models/Bike_Model.dart';

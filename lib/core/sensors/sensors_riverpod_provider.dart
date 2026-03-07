@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter_application_1/core/sensors/sensor_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ✅ No more legacy.dart
 import 'package:screen_brightness/screen_brightness.dart';
 
 // ─── State ───────────────────────────────────────────────
@@ -39,16 +38,28 @@ class SensorState {
 }
 
 // ─── Notifier ────────────────────────────────────────────
-class SensorNotifier extends StateNotifier<SensorState> {
+// ✅ Use Notifier instead of StateNotifier (Riverpod 2.x)
+class SensorNotifier extends Notifier<SensorState> {
   final SensorService _sensorService = SensorService();
   final List<StreamSubscription> _subs = [];
 
-  SensorNotifier() : super(const SensorState()) {
+  @override
+  SensorState build() {
+    // ✅ ref.onDispose replaces override dispose()
+    ref.onDispose(() {
+      for (var s in _subs) {
+        s.cancel();
+      }
+      SensorService().dispose();
+    });
+
     _initAll();
+    return const SensorState();
   }
 
   void _initAll() {
     _sensorService.getBatteryLevel().then((v) {
+      // ✅ state is now directly accessible as a field
       state = state.copyWith(batteryLevel: v, showBatteryWarning: v <= 20);
     });
 
@@ -91,22 +102,10 @@ class SensorNotifier extends StateNotifier<SensorState> {
       await ScreenBrightness().setScreenBrightness(brightness);
     } catch (_) {}
   }
-
-  @override
-  void dispose() {
-    for (var s in _subs) {
-      s.cancel();
-    }
-    SensorService().dispose();
-    super.dispose();
-  }
 }
 
 // ─── Provider ────────────────────────────────────────────
-final sensorProvider = StateNotifierProvider<SensorNotifier, SensorState>((
-  ref,
-) {
-  final notifier = SensorNotifier();
-  ref.onDispose(() => notifier.dispose());
-  return notifier;
-});
+// ✅ NotifierProvider instead of StateNotifierProvider
+final sensorProvider = NotifierProvider<SensorNotifier, SensorState>(
+  SensorNotifier.new,
+);

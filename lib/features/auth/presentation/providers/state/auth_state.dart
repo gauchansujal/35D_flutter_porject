@@ -34,6 +34,8 @@ class AuthState extends Equatable {
     AuthEntity? authEntity,
     String? errorMessage,
     String? uploadPhotoName,
+    bool clearErrorMessage = false, // ← ADD THIS
+    bool clearAuthEntity = false,
   }) {
     return AuthState(
       status: status ?? this.status,

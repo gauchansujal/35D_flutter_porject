@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_application_1/core/api/api_client.dart' as _dio;
+
 import 'package:flutter_application_1/core/api/api_endpoints.dart';
 import 'package:flutter_application_1/core/services/storage/token_services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

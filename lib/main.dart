@@ -3,7 +3,6 @@ import 'package:flutter_application_1/core/sensors/sensor_dashboard_page.dart';
 import 'package:flutter_application_1/core/sensors/sensor_wraper.dart';
 import 'package:flutter_application_1/core/sensors/sensors_riverpod_provider.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
-import 'package:flutter_application_1/shared_perf/shared_perf.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
