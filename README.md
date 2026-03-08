@@ -19,5 +19,6 @@ It allows users to browse available bikes and book them easily.
 
 ## Author
 Sujal Gauchan
-<img width="825" height="790" alt="image" src="https://github.com/user-attachments/assets/2b5dec06-e52c-4072-89ae-3a33e8d95e42" />
+<img width="777" height="648" alt="image" src="https://github.com/user-attachments/assets/3ad9fdae-6b09-45b1-846e-7c572bbb9ce1" />
+
 
