@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Correct imports for your project structure
 import 'package:flutter_application_1/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:flutter_application_1/features/auth/presentation/providers/state/auth_state.dart';
 
@@ -13,14 +12,11 @@ class LoginPages extends ConsumerWidget {
     final authState = ref.watch(authViewModelProvider);
     final authNotifier = ref.read(authViewModelProvider.notifier);
 
-    // Text controllers
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
 
-    // Listen to auth state changes
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
-        // Only navigate on successful login
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else if (next.status == AuthStatus.error && next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -33,16 +29,28 @@ class LoginPages extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
+        // ✅ prevents overflow on small screens
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 60), // ✅ top spacing
+            // ✅ login.png image above "Login" text
+            Image.asset(
+              'assets/images/login.png',
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+
             const Text(
               'Login',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
+
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
@@ -78,11 +86,7 @@ class LoginPages extends ConsumerWidget {
                           return;
                         }
 
-                        // Call login from ViewModel
-                        authNotifier.login(
-                          username: email, // Using email as username
-                          password: password,
-                        );
+                        authNotifier.login(username: email, password: password);
                       },
               child:
                   authState.status == AuthStatus.loading
@@ -100,7 +104,7 @@ class LoginPages extends ConsumerWidget {
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/signup');
               },
-              child: const Text('Don\'t have an account? Signup'),
+              child: const Text("Don't have an account? Signup"),
             ),
           ],
         ),
