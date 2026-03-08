@@ -1,16 +1,21 @@
-# flutter_application_1
+# Moto Rent
 
-A new Flutter project.
+Moto Rent is a bike rental application developed using Flutter. 
+It allows users to browse available bikes and book them easily.
 
-## Getting Started
+## Features
+- User Login and Registration
+- Upload Documents before booking
+- Bike Search and Listing
+- Bike Booking System
+- User Profile Update
+- Booking Notification
 
-This project is a starting point for a Flutter application.
+## Technologies Used
+- Flutter
+- Node.js Backend
+- JWT Authentication
+- REST API
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Author
+Sujal Gauchan
