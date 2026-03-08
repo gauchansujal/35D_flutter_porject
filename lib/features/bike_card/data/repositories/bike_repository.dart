@@ -25,7 +25,7 @@ class BikeRepository implements IBikeRepositrory {
       final bikes = await _bikeRemoteDataSource.getAllBikes();
       return Right(BikeModel.toEntityList(bikes));
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -35,7 +35,7 @@ class BikeRepository implements IBikeRepositrory {
       final bike = await _bikeRemoteDataSource.getBikeById(id);
       return Right(bike.toEntity());
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -45,7 +45,7 @@ class BikeRepository implements IBikeRepositrory {
       await _bikeRemoteDataSource.addBike(BikeModel.fromEntity(bike));
       return const Right(null);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -55,7 +55,7 @@ class BikeRepository implements IBikeRepositrory {
       await _bikeRemoteDataSource.updateBike(id, BikeModel.fromEntity(bike));
       return const Right(null);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -66,7 +66,7 @@ class BikeRepository implements IBikeRepositrory {
       await _bikeRemoteDataSource.deleteBike(id);
       return const Right(null);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 }

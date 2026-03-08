@@ -49,7 +49,7 @@ void main() {
     // arrange
     when(
       () => mockRepository.login(username, password),
-    ).thenAnswer((_) async => Left(ApiFailure(message: "Login failed")));
+    ).thenAnswer((_) async => Left(ApiFailure('', message: "Login failed")));
 
     // act
     final result = await usecase(

@@ -75,16 +75,17 @@ class AuthRepository implements IAuthRepository {
         return Right(entity);
       }
 
-      return const Left(ApiFailure(message: "invalid credentials"));
+      return const Left(ApiFailure('', message: "invalid credentials"));
     } on DioException catch (e) {
       return Left(
         ApiFailure(
+          '',
           message: e.response?.data['message'] ?? 'login failed',
           statusCode: e.response?.statusCode,
         ),
       );
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -114,12 +115,13 @@ class AuthRepository implements IAuthRepository {
       } on DioException catch (e) {
         return Left(
           ApiFailure(
+            '',
             message: e.response?.data['message'] ?? 'registration failed',
             statusCode: e.response?.statusCode,
           ),
         );
       } catch (e) {
-        return Left(ApiFailure(message: e.toString()));
+        return Left(ApiFailure('', message: e.toString()));
       }
     } else {
       try {
@@ -166,15 +168,16 @@ class AuthRepository implements IAuthRepository {
       } on DioException catch (e) {
         return Left(
           ApiFailure(
+            '',
             message: e.response?.data['message'] ?? 'Update failed',
             statusCode: e.response?.statusCode,
           ),
         );
       } catch (e) {
-        return Left(ApiFailure(message: e.toString()));
+        return Left(ApiFailure('', message: e.toString()));
       }
     } else {
-      return const Left(ApiFailure(message: 'No internet connection'));
+      return const Left(ApiFailure('', message: 'No internet connection'));
     }
   }
 
@@ -186,10 +189,10 @@ class AuthRepository implements IAuthRepository {
         final fileName = await _authRemoteDataSource.uploadProfileImage(image);
         return Right(fileName!);
       } catch (e) {
-        return Left(ApiFailure(message: e.toString()));
+        return Left(ApiFailure('', message: e.toString()));
       }
     } else {
-      return Left(ApiFailure(message: "not internrt connetcion"));
+      return Left(ApiFailure('', message: "not internrt connetcion"));
     }
   }
 

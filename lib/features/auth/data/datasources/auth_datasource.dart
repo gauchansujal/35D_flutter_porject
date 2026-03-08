@@ -23,7 +23,6 @@ abstract interface class IAuthRemoteDataSource {
   Future<AuthApiModel?> login(String email, String password);
   Future<AuthApiModel?> getUserById(String authId);
   Future<void> updateProfile(AuthEntity profile);
-  
 
   /// Uploads profile image and returns the public URL from server
   Future<String?> uploadProfileImage(File image);

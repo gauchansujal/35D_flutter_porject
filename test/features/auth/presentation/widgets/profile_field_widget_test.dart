@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/features/auth/presentation/widgets/profile_field_widget.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// ─── Copy your widget here or import it ───────────────────────────────────────
-// import 'package:your_app/profile_field_widget.dart';
-
 void main() {
   late TextEditingController controller;
 
@@ -69,7 +66,6 @@ void main() {
     ) async {
       await tester.pumpWidget(buildWidget(icon: Icons.email));
 
-      // only prefix icon — no extra icon
       expect(find.byIcon(Icons.visibility), findsNothing);
     });
 
@@ -169,7 +165,8 @@ void main() {
       await tester.pumpWidget(buildWidget());
 
       final tf = tester.widget<TextField>(find.byType(TextField));
-      expect(tf.keyboardType, isNull);
+      // Flutter defaults to TextInputType.text when keyboardType is null
+      expect(tf.keyboardType, TextInputType.text);
     });
 
     testWidgets('sets email keyboard type', (tester) async {

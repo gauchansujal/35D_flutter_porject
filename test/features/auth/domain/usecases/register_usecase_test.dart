@@ -54,7 +54,7 @@ void main() {
     // arrange
     when(
       () => mockRepository.register(any()),
-    ).thenAnswer((_) async => Left(ApiFailure(message: "Register failed")));
+    ).thenAnswer((_) async => Left(ApiFailure('', message: "Register failed")));
 
     // act
     final result = await usecase(

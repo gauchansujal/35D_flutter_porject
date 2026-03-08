@@ -31,7 +31,7 @@ class UplodedocumnetRepository implements IUplodeDocumnetRepsitory {
       final result = await _remoteDatasource.create(model);
       return Right(result.toEntity()); // Model → Entity
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -44,7 +44,7 @@ class UplodedocumnetRepository implements IUplodeDocumnetRepsitory {
         UplodedocumentModel.toEntityList(result),
       ); // List<Model> → List<Entity>
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -55,7 +55,7 @@ class UplodedocumnetRepository implements IUplodeDocumnetRepsitory {
       final result = await _remoteDatasource.getById(id);
       return Right(result.toEntity()); // Model → Entity
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -70,7 +70,7 @@ class UplodedocumnetRepository implements IUplodeDocumnetRepsitory {
       await _remoteDatasource.update(id, model);
       return const Right(unit);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -81,7 +81,7 @@ class UplodedocumnetRepository implements IUplodeDocumnetRepsitory {
       await _remoteDatasource.delete(id);
       return const Right(unit);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 }

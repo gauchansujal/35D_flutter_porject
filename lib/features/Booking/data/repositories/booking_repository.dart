@@ -27,7 +27,7 @@ class BookingRepository implements IBookingRepository {
       final result = await _bookingRemoteDataSource.createBooking(model);
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure(' ', message: e.toString()));
     }
   }
 
@@ -37,7 +37,7 @@ class BookingRepository implements IBookingRepository {
       await _bookingRemoteDataSource.deleteBooking(id);
       return const Right(unit);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -47,7 +47,7 @@ class BookingRepository implements IBookingRepository {
       final result = await _bookingRemoteDataSource.getAllBookings();
       return Right(BookingModel.toEntityList(result));
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -57,7 +57,7 @@ class BookingRepository implements IBookingRepository {
       final result = await _bookingRemoteDataSource.getBookingById(id);
       return Right(result.toEntity());
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 
@@ -71,7 +71,7 @@ class BookingRepository implements IBookingRepository {
       await _bookingRemoteDataSource.updateBooking(id, model);
       return const Right(unit);
     } catch (e) {
-      return Left(ApiFailure(message: e.toString()));
+      return Left(ApiFailure('', message: e.toString()));
     }
   }
 }
