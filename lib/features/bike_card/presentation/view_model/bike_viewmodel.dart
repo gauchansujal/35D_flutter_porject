@@ -36,25 +36,25 @@ class BikeViewModel extends Notifier<BikeState> {
     );
   }
 
-  Future<void> deleteBike(String id) async {
-    state = state.copyWith(status: BikeStatus.loading);
+  // Future<void> deleteBike(String id) async {
+  //   state = state.copyWith(status: BikeStatus.loading);
 
-    final result = await _repository.deleteBike(id);
+  //   final result = await _repository.deleteBike(id);
 
-    result.fold(
-      (failure) =>
-          state = state.copyWith(
-            status: BikeStatus.error,
-            errorMessage: failure.message,
-          ),
-      (_) {
-        // reload list after successful delete
-        getAllBikes();
-      },
-    );
-  }
+  //   result.fold(
+  //     (failure) =>
+  //         state = state.copyWith(
+  //           status: BikeStatus.error,
+  //           errorMessage: failure.message,
+  //         ),
+  //     (_) {
+  //       // reload list after successful delete
+  //       getAllBikes();
+  //     },
+  //   );
+  // }
 
-  void clearError() {
-    state = state.copyWith(errorMessage: null);
-  }
+  // void clearError() {
+  //   state = state.copyWith(errorMessage: null);
+  // }
 }

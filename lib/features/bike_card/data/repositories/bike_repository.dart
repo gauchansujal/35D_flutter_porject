@@ -39,34 +39,34 @@ class BikeRepository implements IBikeRepositrory {
     }
   }
 
-  @override
-  Future<Either<Failure, void>> addBike(BikeEntity bike) async {
-    try {
-      await _bikeRemoteDataSource.addBike(BikeModel.fromEntity(bike));
-      return const Right(null);
-    } catch (e) {
-      return Left(ApiFailure('', message: e.toString()));
-    }
-  }
+  // @override
+  // Future<Either<Failure, void>> addBike(BikeEntity bike) async {
+  //   try {
+  //     await _bikeRemoteDataSource.addBike(BikeModel.fromEntity(bike));
+  //     return const Right(null);
+  //   } catch (e) {
+  //     return Left(ApiFailure('', message: e.toString()));
+  //   }
+  // }
 
-  @override
-  Future<Either<Failure, void>> updateBike(String id, BikeEntity bike) async {
-    try {
-      await _bikeRemoteDataSource.updateBike(id, BikeModel.fromEntity(bike));
-      return const Right(null);
-    } catch (e) {
-      return Left(ApiFailure('', message: e.toString()));
-    }
-  }
+  // @override
+  // Future<Either<Failure, void>> updateBike(String id, BikeEntity bike) async {
+  //   try {
+  //     await _bikeRemoteDataSource.updateBike(id, BikeModel.fromEntity(bike));
+  //     return const Right(null);
+  //   } catch (e) {
+  //     return Left(ApiFailure('', message: e.toString()));
+  //   }
+  // }
 
-  @override
-  Future<Either<Failure, void>> deleteBike(String id) async {
-    // ✅ added
-    try {
-      await _bikeRemoteDataSource.deleteBike(id);
-      return const Right(null);
-    } catch (e) {
-      return Left(ApiFailure('', message: e.toString()));
-    }
-  }
+  // @override
+  // Future<Either<Failure, void>> deleteBike(String id) async {
+  //   // ✅ added
+  //   try {
+  //     await _bikeRemoteDataSource.deleteBike(id);
+  //     return const Right(null);
+  //   } catch (e) {
+  //     return Left(ApiFailure('', message: e.toString()));
+  //   }
+  // }
 }

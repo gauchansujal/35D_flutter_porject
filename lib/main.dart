@@ -4,7 +4,7 @@ import 'package:flutter_application_1/core/sensors/sensor_dashboard_page.dart';
 import 'package:flutter_application_1/core/sensors/sensor_wraper.dart';
 import 'package:flutter_application_1/core/sensors/sensors_riverpod_provider.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
-import 'package:flutter_application_1/features/admin/presentation/page/admin_user_page.dart';
+import 'package:flutter_application_1/features/admin/presentation/page/admin_pannel_page.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -82,8 +82,7 @@ class MyApp extends ConsumerWidget {
         '/signup': (_) => const SignupPage(), // ✅ added const
         '/dashboard': (_) => const DashboardScreen(), // ✅ added const
         '/sensors': (_) => const SensorDashboardPage(),
-        '/admin':      (_) => const AdminUsersPage(), // ✅ ADD
-
+        '/admin': (_) => const AdminPanelPage(), // ✅ ADD
       },
     );
   }

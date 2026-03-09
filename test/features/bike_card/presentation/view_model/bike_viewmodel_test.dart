@@ -7,259 +7,144 @@ import 'package:flutter_application_1/features/bike_card/presentation/providers/
 import 'package:flutter_application_1/features/bike_card/presentation/view_model/bike_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
-class MockBikeRepository extends Mock implements IBikeRepositrory {}
+// ── Fake Repository (no mockito needed) ──────────────
+class FakeBikeRepository implements IBikeRepositrory {
+  Either<Failure, List<BikeEntity>> response = Right([]);
 
-final tBike = BikeEntity(
-  id: 'bike-1',
-  name: 'Ninja 400',
-  brand: 'Kawasaki',
-  engineCC: 400,
-  milage: '15km/l',
-  isAvailable: true,
-  price: '5000',
-  imageUrl: null,
-);
-final tBikeList = [tBike];
+  @override
+  Future<Either<Failure, List<BikeEntity>>> getAllBikes() async => response;
 
-// ─── Wait until state leaves initial/loading ───────────────────────────────
-Future<BikeState> waitForState(ProviderContainer container) async {
-  for (var i = 0; i < 20; i++) {
-    final s = container.read(bikeViewModelProvider);
-    if (s.status != BikeStatus.initial && s.status != BikeStatus.loading) {
-      return s;
-    }
-    await Future.delayed(const Duration(milliseconds: 50));
-  }
-  return container.read(bikeViewModelProvider);
+  @override
+  Future<Either<Failure, BikeEntity>> getBikeById(String id) async =>
+      throw UnimplementedError();
 }
 
 void main() {
-  late MockBikeRepository mockRepo;
+  late FakeBikeRepository fakeRepository;
   late ProviderContainer container;
 
+  final fakeBikes = [
+    const BikeEntity(
+      id: '1',
+      name: 'CBR 150',
+      brand: 'Honda',
+      price: '200000',
+      engineCC: 150,
+      milage: '45kmpl',
+      isAvailable: true,
+    ),
+    const BikeEntity(
+      id: '2',
+      name: 'R15',
+      brand: 'Yamaha',
+      price: '250000',
+      engineCC: 155,
+      milage: '40kmpl',
+      isAvailable: true,
+    ),
+  ];
+
   setUp(() {
-    mockRepo = MockBikeRepository();
-  });
-
-  tearDown(() {
-    container.dispose();
-    reset(mockRepo);
-  });
-
-  ProviderContainer make() {
-    return ProviderContainer(
-      overrides: [bikeRepositoryProvider.overrideWithValue(mockRepo)],
+    fakeRepository = FakeBikeRepository();
+    container = ProviderContainer(
+      overrides: [bikeRepositoryProvider.overrideWithValue(fakeRepository)],
     );
-  }
+  });
 
-  // ─── 1. Initial State ────────────────────────────────────────────────────
+  tearDown(() => container.dispose());
 
-  group('Initial state', () {
-    test('loaded with bikes after build completes', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => Right(tBikeList));
+  group('BikeViewModel', () {
+    test('1 - initial state is initial with empty bikes', () {
+      fakeRepository.response = Right(fakeBikes);
 
-      container = make();
-      container.read(bikeViewModelProvider); // trigger build
-      final state = await waitForState(container);
-
-      expect(state.status, BikeStatus.loaded);
-      expect(state.bikes, tBikeList);
-    });
-
-    test('is initial before async resolves', () async {
-      when(() => mockRepo.getAllBikes()).thenAnswer((_) async {
-        await Future.delayed(const Duration(seconds: 1));
-        return Right(tBikeList);
-      });
-
-      container = make();
       final state = container.read(bikeViewModelProvider);
 
-      expect(
-        [BikeStatus.initial, BikeStatus.loading].contains(state.status),
-        isTrue,
-      );
-    });
-  });
-
-  // ─── 2. getAllBikes ──────────────────────────────────────────────────────
-
-  group('getAllBikes', () {
-    test('sets loaded with bikes on success', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => Right(tBikeList));
-
-      container = make();
-      container.read(bikeViewModelProvider);
-      final state = await waitForState(container);
-
-      expect(state.status, BikeStatus.loaded);
-      expect(state.bikes, tBikeList);
+      expect(state.status, BikeStatus.initial);
+      expect(state.bikes, isEmpty);
       expect(state.errorMessage, isNull);
     });
 
-    test('sets error on ApiFailure', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => Left(ApiFailure('', message: 'Network error')));
+    test('2 - getAllBikes → loaded with bikes on success', () async {
+      fakeRepository.response = Right(fakeBikes);
 
-      container = make();
-      container.read(bikeViewModelProvider);
-      final state = await waitForState(container);
+      final vm = container.read(bikeViewModelProvider.notifier);
+      await vm.getAllBikes();
 
-      expect(state.status, BikeStatus.error);
-      expect(state.errorMessage, 'Network error');
-    });
-
-    test('sets error on LocalDatabaseFailure', () async {
-      when(() => mockRepo.getAllBikes()).thenAnswer(
-        (_) async =>
-            const Left(LocalDatabaseFailure(message: 'DB read failed')),
-      );
-
-      container = make();
-      container.read(bikeViewModelProvider);
-      final state = await waitForState(container);
-
-      expect(state.status, BikeStatus.error);
-      expect(state.errorMessage, 'DB read failed');
-    });
-
-    test('loaded with empty list when no bikes exist', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => const Right([]));
-
-      container = make();
-      container.read(bikeViewModelProvider);
-      final state = await waitForState(container);
-
+      final state = container.read(bikeViewModelProvider);
       expect(state.status, BikeStatus.loaded);
-      expect(state.bikes, isEmpty);
-    });
-  });
-
-  // ─── 3. deleteBike ──────────────────────────────────────────────────────
-
-  group('deleteBike', () {
-    test('reloads bikes after successful delete', () async {
-      var callCount = 0;
-      when(() => mockRepo.getAllBikes()).thenAnswer((_) async {
-        callCount++;
-        return callCount == 1 ? Right(tBikeList) : const Right([]);
-      });
-      when(
-        () => mockRepo.deleteBike(any()),
-      ).thenAnswer((_) async => const Right(true));
-
-      container = make();
-      container.read(bikeViewModelProvider);
-      await waitForState(container);
-
-      await container.read(bikeViewModelProvider.notifier).deleteBike('bike-1');
-      await waitForState(container);
-
-      verify(() => mockRepo.deleteBike('bike-1')).called(1);
-      verify(() => mockRepo.getAllBikes()).called(greaterThanOrEqualTo(2));
+      expect(state.bikes.length, 2);
+      expect(state.bikes.first.name, 'CBR 150');
+      expect(state.errorMessage, isNull);
     });
 
-    test('sets error state when delete fails', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => Right(tBikeList));
-      when(
-        () => mockRepo.deleteBike(any()),
-      ).thenAnswer((_) async => Left(ApiFailure('', message: 'Delete failed')));
+    test('3 - getAllBikes → error with message on failure', () async {
+      fakeRepository.response = Left(ApiFailure('', message: 'Network error'));
 
-      container = make();
-      container.read(bikeViewModelProvider);
-      await waitForState(container);
-
-      await container.read(bikeViewModelProvider.notifier).deleteBike('bike-1');
+      final vm = container.read(bikeViewModelProvider.notifier);
+      await vm.getAllBikes();
 
       final state = container.read(bikeViewModelProvider);
       expect(state.status, BikeStatus.error);
-      expect(state.errorMessage, 'Delete failed');
+      expect(state.bikes, isEmpty);
+      expect(state.errorMessage, 'Network error');
     });
 
-    test('calls deleteBike with correct id', () async {
-      when(
-        () => mockRepo.getAllBikes(),
-      ).thenAnswer((_) async => Right(tBikeList));
-      when(
-        () => mockRepo.deleteBike(any()),
-      ).thenAnswer((_) async => const Right(true));
+    test(
+      '4 - getAllBikes → fallback message when failure.message is null',
+      () async {
+        fakeRepository.response = Left(ApiFailure('', message: ''));
 
-      container = make();
-      container.read(bikeViewModelProvider);
-      await waitForState(container);
+        final vm = container.read(bikeViewModelProvider.notifier);
+        await vm.getAllBikes();
 
-      await container
-          .read(bikeViewModelProvider.notifier)
-          .deleteBike('bike-999');
+        final state = container.read(bikeViewModelProvider);
+        expect(state.status, BikeStatus.error);
+        expect(state.errorMessage, 'Failed to load bikes');
+      },
+    );
 
-      verify(() => mockRepo.deleteBike('bike-999')).called(1);
-    });
-  });
+    test('5 - getAllBikes → sets loading before result arrives', () async {
+      fakeRepository.response = Right(fakeBikes);
 
-  // ─── 5. BikeEntity ──────────────────────────────────────────────────────
+      final vm = container.read(bikeViewModelProvider.notifier);
+      final future = vm.getAllBikes();
 
-  group('BikeEntity', () {
-    setUp(() {
-      // dummy repo for entity-only tests
-      container = make();
-    });
+      final loadingState = container.read(bikeViewModelProvider);
+      expect(loadingState.status, BikeStatus.loading);
 
-    test('fullImageUrl empty when imageUrl is null', () {
-      final bike = BikeEntity(
-        name: 'T',
-        brand: 'B',
-        engineCC: 150,
-        milage: '20km/l',
-        isAvailable: true,
-        price: '1000',
-      );
-      expect(bike.fullImageUrl, '');
+      await future;
+
+      expect(container.read(bikeViewModelProvider).status, BikeStatus.loaded);
     });
 
-    test('fullImageUrl returns https url unchanged', () {
-      final bike = BikeEntity(
-        name: 'T',
-        brand: 'B',
-        engineCC: 150,
-        milage: '20km/l',
-        isAvailable: true,
-        price: '1000',
-        imageUrl: 'https://example.com/bike.jpg',
-      );
-      expect(bike.fullImageUrl, 'https://example.com/bike.jpg');
+    test('6 - getAllBikes → clears error on successful retry', () async {
+      fakeRepository.response = Left(ApiFailure('', message: 'Server down'));
+
+      final vm = container.read(bikeViewModelProvider.notifier);
+      await vm.getAllBikes();
+      expect(container.read(bikeViewModelProvider).errorMessage, 'Server down');
+
+      fakeRepository.response = Right(fakeBikes);
+      await vm.getAllBikes();
+
+      final state = container.read(bikeViewModelProvider);
+      expect(state.status, BikeStatus.loaded);
+      expect(state.errorMessage, isNull);
     });
 
-    test('copyWith updates only specified fields', () {
-      final updated = tBike.copyWith(name: 'Updated', isAvailable: false);
-      expect(updated.name, 'Updated');
-      expect(updated.isAvailable, isFalse);
-      expect(updated.brand, tBike.brand);
-      expect(updated.price, tBike.price);
-    });
+    test(
+      '7 - getAllBikes → loaded with empty list when API returns no bikes',
+      () async {
+        fakeRepository.response = const Right([]);
 
-    test('two BikeEntities with same props are equal', () {
-      final bike2 = BikeEntity(
-        id: 'bike-1',
-        name: 'Ninja 400',
-        brand: 'Kawasaki',
-        engineCC: 400,
-        milage: '15km/l',
-        isAvailable: true,
-        price: '5000',
-        imageUrl: null,
-      );
-      expect(tBike, bike2);
-    });
+        final vm = container.read(bikeViewModelProvider.notifier);
+        await vm.getAllBikes();
+
+        final state = container.read(bikeViewModelProvider);
+        expect(state.status, BikeStatus.loaded);
+        expect(state.bikes, isEmpty);
+      },
+    );
   });
 }

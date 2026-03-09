@@ -53,6 +53,8 @@ class ApiEndpoints {
   static const String bike = '/bike';
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
+  static String bikeById(String id) => '/bike/$id';
+  static String bikeByName(String name) => '/bike/name/$name';
 
   // ============ Admin User Endpoints ============
   // Express: app.use('/api/admin/users', adminUserRoutes)
