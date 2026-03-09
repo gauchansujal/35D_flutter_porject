@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // ✅ ADD THIS
 import 'package:flutter_application_1/core/sensors/sensor_dashboard_page.dart';
 import 'package:flutter_application_1/core/sensors/sensor_wraper.dart';
 import 'package:flutter_application_1/core/sensors/sensors_riverpod_provider.dart';
 import 'package:flutter_application_1/core/services/storage/user_session_service.dart';
+import 'package:flutter_application_1/features/admin/presentation/page/admin_user_page.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -20,41 +22,36 @@ import 'package:flutter_application_1/features/dashboard/persentation/pages/dash
 
 // Hive Model & Constants
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
-import 'package:flutter_application_1/core/constants/hive_table_constatn.dart'; // For box names
+import 'package:flutter_application_1/core/constants/hive_table_constatn.dart';
 
 void main() async {
-  // Essential: Initialize bindings before async calls
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Get app directory and initialize Hive Flutter
+  // ✅ ADD THIS - Fixes keyboard issues on physical devices
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+  );
+
+  // ✅ ADD THIS - Fixes IME/keyboard cancel issue on physical devices
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   final appDocumentDir = await path_provider.getApplicationDocumentsDirectory();
   await Hive.initFlutter(appDocumentDir.path);
 
-  // Register Hive adapter for AuthHiveModel
   if (!Hive.isAdapterRegistered(HiveTableConstant.authTypeId)) {
     Hive.registerAdapter(AuthHiveModelAdapter());
   }
 
-  // Open required boxes early (better performance + ensures they're ready)
-  await Hive.openBox<AuthHiveModel>(
-    HiveTableConstant.authTable,
-  ); // 'auth_table'
-  await Hive.openBox(
-    'app_settings',
-  ); // For current_user_id, seenOnboarding, etc.
+  await Hive.openBox<AuthHiveModel>(HiveTableConstant.authTable);
+  await Hive.openBox('app_settings');
 
-  //shared preferances to object
-  // shared pref = async
-  //provider = sync
+  final sharedPref =
+      await SharedPreferences.getInstance(); // ✅ fixed variable name
 
-  //shared prefs
-  final SharedPref = await SharedPreferences.getInstance();
-
-  // Run the app with Riverpod ProviderScope
   runApp(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(SharedPref)],
-      child: MyApp(),
+      overrides: [sharedPreferencesProvider.overrideWithValue(sharedPref)],
+      child: const MyApp(), // ✅ added const
     ),
   );
 }
@@ -69,14 +66,24 @@ class MyApp extends ConsumerWidget {
       title: 'Bike-Rental',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      builder:(context, child) => SensorWrapper(child: child!),
+      // ✅ ADD THIS - critical for keyboard on physical devices
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.noScaling, // prevents font scaling issues
+          ),
+          child: SensorWrapper(child: child!),
+        );
+      },
       home: const SplashPage(),
       routes: {
-        '/login': (_) => LoginPages(),
-        '/onboarding': (_) => OnboardingPages(),
-        '/signup': (_) => SignupPage(),
-        '/dashboard': (_) => DashboardScreen(),
+        '/login': (_) => const LoginPages(), // ✅ added const
+        '/onboarding': (_) => OnboardingPages(), // ✅ added const
+        '/signup': (_) => const SignupPage(), // ✅ added const
+        '/dashboard': (_) => const DashboardScreen(), // ✅ added const
         '/sensors': (_) => const SensorDashboardPage(),
+        '/admin':      (_) => const AdminUsersPage(), // ✅ ADD
+
       },
     );
   }

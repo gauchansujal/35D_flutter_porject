@@ -24,12 +24,14 @@ class UserSessionService {
   static const String _keyUserPhoneNumber = 'user_phone_number';
   static const String _keyUserBatchId = 'user_batch_id';
   static const String _keyUserProfilePicture = 'user_profile_picture';
+  static const String _keyUserRole = 'user_role'; // ✅ ADD
 
   UserSessionService({required SharedPreferences prefs}) : _prefs = prefs;
 
   // Save user session after login
   Future<void> saveUserSession({
     required String userId,
+    required String role, // ✅ ADD
     required String email,
     required String fullName,
 
@@ -39,6 +41,7 @@ class UserSessionService {
     String? profilePicture,
   }) async {
     await _prefs.setBool(_keyIsLoggedIn, true);
+    await _prefs.setString(_keyUserRole, role); // ✅ ADD
     await _prefs.setString(_keyUserId, userId);
     await _prefs.setString(_keyUserEmail, email);
     await _prefs.setString(_keyUserFullName, fullName);
@@ -94,6 +97,8 @@ class UserSessionService {
     return _prefs.getString(_keyUserProfilePicture);
   }
 
+  String? getCurrentUserRole() => _prefs.getString(_keyUserRole); // ✅ ADD
+
   // Clear user session (logout)
   Future<void> clearSession() async {
     await _prefs.setBool(_keyIsLoggedIn, false);
@@ -104,6 +109,8 @@ class UserSessionService {
     await _prefs.remove(_keyUserUsername);
     await _prefs.remove(_keyUserPhoneNumber);
     await _prefs.remove(_keyUserBatchId);
+
+    await _prefs.remove(_keyUserRole); // ✅ ADD
     await _prefs.remove(_keyUserProfilePicture);
   }
 }

@@ -9,6 +9,7 @@ class AuthApiModel {
   final String? password;
   final String? profilepicture;
   final String? confirmPassword;
+  final String? role;
 
   AuthApiModel({
     this.userid,
@@ -16,7 +17,7 @@ class AuthApiModel {
     required this.email,
     this.password,
     this.profilepicture,
-    this.confirmPassword,
+    this.confirmPassword, this.role,
   });
 
   // toJson
@@ -48,6 +49,7 @@ class AuthApiModel {
       // username: json['username'] as String,
       profilepicture: json['imageUrl'] as String?,
       password: '',
+      role : json['role']as String?,
     );
   }
 
@@ -61,6 +63,7 @@ class AuthApiModel {
       // phoneNumber: phoneNumber,
       password: password,
       profilePicture: profilepicture,
+      role: role,
       // batchId: '',
     );
   }
@@ -76,6 +79,7 @@ class AuthApiModel {
       password: entity.password,
       profilepicture: entity.profilePicture,
       confirmPassword: entity.confirmPassword,
+      role: entity.role,
     );
   }
 

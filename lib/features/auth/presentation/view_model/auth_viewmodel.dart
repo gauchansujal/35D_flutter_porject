@@ -47,6 +47,7 @@ class AuthViewmodel extends Notifier<AuthState> {
       final fullName = prefs.getString('user_fullname')?.trim();
       final email = prefs.getString('user_email')?.trim();
       final profilePic = prefs.getString('user_profile_pic')?.trim();
+      final role = prefs.getString('user_role')?.trim(); // ✅ ADD
 
       if (email != null && email.isNotEmpty) {
         state = state.copyWith(
@@ -56,6 +57,7 @@ class AuthViewmodel extends Notifier<AuthState> {
             fullName: fullName,
             email: email,
             profilePicture: profilePic?.isNotEmpty == true ? profilePic : null,
+            role: role, // ✅ ADD
           ),
           clearErrorMessage: true,
         );
@@ -94,15 +96,17 @@ class AuthViewmodel extends Notifier<AuthState> {
     final result = await _registerUsecase(params);
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      ),
-      (isRegistered) => state = state.copyWith(
-        status: isRegistered ? AuthStatus.registered : AuthStatus.error,
-        errorMessage: isRegistered ? null : 'Registration failed',
-        clearErrorMessage: isRegistered,
-      ),
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ),
+      (isRegistered) =>
+          state = state.copyWith(
+            status: isRegistered ? AuthStatus.registered : AuthStatus.error,
+            errorMessage: isRegistered ? null : 'Registration failed',
+            clearErrorMessage: isRegistered,
+          ),
     );
   }
 
@@ -117,10 +121,11 @@ class AuthViewmodel extends Notifier<AuthState> {
     final result = await _loginUsecase(params);
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      ),
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message,
+          ),
       (authEntity) async {
         state = state.copyWith(
           status: AuthStatus.authenticated,
@@ -133,26 +138,27 @@ class AuthViewmodel extends Notifier<AuthState> {
         await prefs.setString('user_fullname', authEntity.fullName ?? '');
         await prefs.setString('user_email', authEntity.email ?? '');
         await prefs.setString(
-            'user_profile_pic', authEntity.profilePicture ?? '');
+          'user_profile_pic',
+          authEntity.profilePicture ?? '',
+        );
+        await prefs.setString('user_role', authEntity.role ?? 'user'); // ✅ ADD
       },
     );
   }
 
   // LOGOUT
   Future<void> logout() async {
-    state = state.copyWith(
-      status: AuthStatus.loading,
-      clearErrorMessage: true,
-    );
+    state = state.copyWith(status: AuthStatus.loading, clearErrorMessage: true);
 
     final logoutUsecase = ref.read(logoutUsecaseProvider);
     final result = await logoutUsecase();
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message ?? 'Failed to logout',
-      ),
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Failed to logout',
+          ),
       (_) async {
         state = state.copyWith(
           status: AuthStatus.unauthenticated,
@@ -166,34 +172,34 @@ class AuthViewmodel extends Notifier<AuthState> {
         await prefs.remove('user_email');
         await prefs.remove('user_profile_pic');
         await prefs.remove('user_phone');
+        await prefs.remove('user_role'); // ✅ ADD
       },
     );
   }
 
   // UPLOAD PHOTO
   Future<void> uploadPhoto(File photo) async {
-    state = state.copyWith(
-      status: AuthStatus.loading,
-      clearErrorMessage: true,
-    );
+    state = state.copyWith(status: AuthStatus.loading, clearErrorMessage: true);
 
     final uploadResult = await _uploadPhotoUsecase(photo);
 
     uploadResult.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message ?? 'Failed to upload photo',
-      ),
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Failed to upload photo',
+          ),
       (imageName) async {
         final updateResult = await _updateProfileUsecase(
           AuthEntity(localProfilePicturePath: photo.path),
         );
 
         updateResult.fold(
-          (failure) => state = state.copyWith(
-            status: AuthStatus.error,
-            errorMessage: failure.message ?? 'Failed to update profile',
-          ),
+          (failure) =>
+              state = state.copyWith(
+                status: AuthStatus.error,
+                errorMessage: failure.message ?? 'Failed to update profile',
+              ),
           (_) async {
             state = state.copyWith(
               status: AuthStatus.authenticated,
@@ -218,20 +224,18 @@ class AuthViewmodel extends Notifier<AuthState> {
     String? email,
     String? password,
   }) async {
-    state = state.copyWith(
-      status: AuthStatus.loading,
-      clearErrorMessage: true,
-    );
+    state = state.copyWith(status: AuthStatus.loading, clearErrorMessage: true);
 
     final result = await _updateProfileUsecase(
       AuthEntity(fullName: fullName, email: email, password: password),
     );
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message ?? 'Update failed',
-      ),
+      (failure) =>
+          state = state.copyWith(
+            status: AuthStatus.error,
+            errorMessage: failure.message ?? 'Update failed',
+          ),
       (_) async {
         state = state.copyWith(
           status: AuthStatus.authenticated,

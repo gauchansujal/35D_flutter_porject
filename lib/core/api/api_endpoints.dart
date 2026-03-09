@@ -54,6 +54,13 @@ class ApiEndpoints {
   static String itemById(String id) => '/items/$id';
   static String itemClaim(String id) => '/items/$id/claim';
 
+  // ============ Admin User Endpoints ============
+  // Express: app.use('/api/admin/users', adminUserRoutes)
+  static const String adminUsers = '/admin/users'; // GET all, POST create
+  static String adminUserById(String id) =>
+      '/admin/users/$id'; // GET one, PUT update, DELETE
+  static const String adminUploadImage = '/admin/users/upload-image';
+
   static String itemUplodeVideo = '/auth/uplode-video';
   // ============ Notification Endpoints ============
   static const String notification = '/notification';

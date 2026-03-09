@@ -63,6 +63,7 @@ class AuthRemoteDataSources implements IAuthRemoteDataSource {
         userId: user.userid ?? '',
         email: user.email,
         fullName: user.fullname,
+        role: user.role ?? 'user',
       );
 
       final token = response.data['token'] as String?;

@@ -11,6 +11,7 @@ class AuthEntity extends Equatable {
   final String? profilePicture;
   final String? localProfilePicturePath;
   final String? confirmPassword;
+  final String? role;
 
   const AuthEntity({
     this.userId,
@@ -23,7 +24,7 @@ class AuthEntity extends Equatable {
     this.profilePicture,
 
     this.localProfilePicturePath,
-    this.confirmPassword,
+    this.confirmPassword, this.role,
   });
 
   @override
@@ -37,6 +38,7 @@ class AuthEntity extends Equatable {
     password,
     profilePicture,
     localProfilePicturePath,
+    role,
   ];
 
   AuthEntity copyWith({
@@ -47,6 +49,7 @@ class AuthEntity extends Equatable {
     String? password,
     String? profilePicture,
     String? localProfilePicturePath,
+    String? role,
     // you can add other fields later if needed
   }) {
     return AuthEntity(
@@ -58,6 +61,7 @@ class AuthEntity extends Equatable {
       profilePicture: profilePicture ?? this.profilePicture,
       localProfilePicturePath:
           localProfilePicturePath ?? this.localProfilePicturePath,
+          role:  role?? this.role,
       // authId is not stored as field, so ignored
     );
   }
