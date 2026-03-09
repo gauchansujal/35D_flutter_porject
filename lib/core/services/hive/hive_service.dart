@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/constants/hive_table_constatn.dart';
 import 'package:flutter_application_1/features/auth/data/models/auth_hive_model.dart';
 import 'package:hive/hive.dart';

@@ -16,20 +16,18 @@ final registerUsecaseProvider = Provider<RegisterUsecase>((ref) {
 class RegisterUsecaseParams extends Equatable {
   final String fullName;
   final String email;
-  final String? phoneNumber;
 
   final String password;
 
   const RegisterUsecaseParams({
     required this.fullName,
     required this.email,
-    this.phoneNumber,
 
     required this.password,
   });
 
   @override
-  List<Object?> get props => [fullName, email, phoneNumber, password];
+  List<Object?> get props => [fullName, email, password];
 }
 
 abstract class UsecaseWithParams<Type, Params> {
@@ -48,7 +46,7 @@ class RegisterUsecase
     final entity = AuthEntity(
       fullName: params.fullName,
       email: params.email,
-      phoneNumber: params.phoneNumber, // Now included!
+      // phoneNumber: params.phoneNumber, // Now included!
       // batchId: params.batchId,
       // username: params.username,
       password: params.password,

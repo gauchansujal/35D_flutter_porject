@@ -1,21 +1,25 @@
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_application_1/core/api/api_endpoints.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:flutter_application_1/core/api/api_endpoints.dart';
+import 'package:flutter_application_1/core/services/storage/token_services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 // Provider for ApiClient
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
+  final tokenServices = ref.read(
+    tokenServicesProvider,
+  ); // ← inject TokenServices
+  return ApiClient(tokenServices);
 });
 
 class ApiClient {
   late final Dio _dio;
+  final TokenServices _tokenServices;
 
-  ApiClient() {
+  ApiClient(this._tokenServices) {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
@@ -29,7 +33,7 @@ class ApiClient {
     );
 
     // Add interceptors
-    _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_AuthInterceptor(_tokenServices)); // ← pass in
 
     // Auto retry on network failures
     _dio.interceptors.add(
@@ -42,7 +46,6 @@ class ApiClient {
           Duration(seconds: 3),
         ],
         retryEvaluator: (error, attempt) {
-          // Retry on connection errors and timeouts, not on 4xx/5xx
           return error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
@@ -68,7 +71,6 @@ class ApiClient {
 
   Dio get dio => _dio;
 
-  // GET request
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -77,7 +79,6 @@ class ApiClient {
     return _dio.get(path, queryParameters: queryParameters, options: options);
   }
 
-  // POST request
   Future<Response> post(
     String path, {
     dynamic data,
@@ -92,7 +93,6 @@ class ApiClient {
     );
   }
 
-  // PUT request
   Future<Response> put(
     String path, {
     dynamic data,
@@ -107,7 +107,6 @@ class ApiClient {
     );
   }
 
-  // DELETE request
   Future<Response> delete(
     String path, {
     dynamic data,
@@ -122,7 +121,6 @@ class ApiClient {
     );
   }
 
-  // Multipart request for file uploads
   Future<Response> uploadFile(
     String path, {
     required FormData formData,
@@ -136,35 +134,44 @@ class ApiClient {
       onSendProgress: onSendProgress,
     );
   }
+
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
 }
 
-// Auth Interceptor to add JWT token to requests
+// Auth Interceptor — uses TokenServices (same instance as login)
 class _AuthInterceptor extends Interceptor {
-  final _storage = const FlutterSecureStorage();
-  static const String _tokenKey = 'auth_token';
+  final TokenServices _tokenServices;
+
+  _AuthInterceptor(this._tokenServices);
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth for public endpoints
-    final publicEndpoints = [
-      // ApiEndpoints.batches,
-      ApiEndpoints.categories,
-      ApiEndpoints.studentLogin,
-    ];
-
     final isPublicGet =
         options.method == 'GET' &&
-        publicEndpoints.any((endpoint) => options.path.startsWith(endpoint));
+        [ApiEndpoints.categories].any((e) => options.path.startsWith(e));
 
     final isAuthEndpoint =
         options.path == ApiEndpoints.studentLogin ||
         options.path == ApiEndpoints.students;
 
     if (!isPublicGet && !isAuthEndpoint) {
-      final token = await _storage.read(key: _tokenKey);
+      final token = await _tokenServices.getToken();
+      // print('🔑 INTERCEPTOR TOKEN: $token'); // remove after confirmed working
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -175,11 +182,8 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Handle 401 Unauthorized - token expired
     if (err.response?.statusCode == 401) {
-      // Clear token and redirect to login
-      _storage.delete(key: _tokenKey);
-      // You can add navigation logic here or use a callback
+      _tokenServices.removeToken();
     }
     handler.next(err);
   }

@@ -4,31 +4,34 @@ class AuthApiModel {
   final String? userid;
   final String fullname;
   final String email;
-  final String? phoneNumber;
+  // final String? phoneNumber;
   // final String username;
   final String? password;
   final String? profilepicture;
+  final String? confirmPassword;
+  final String? role;
 
   AuthApiModel({
     this.userid,
     required this.fullname,
     required this.email,
-    this.phoneNumber,
-    // required this.username,
     this.password,
     this.profilepicture,
+    this.confirmPassword, this.role,
   });
 
   // toJson
   Map<String, dynamic> toJson() {
     return {
       "id": userid,
-      "fullname": fullname,
+      "firstname": fullname.split(' ').first,
+      "lastname":
+          fullname.split(' ').length > 1 ? fullname.split(' ').last : '',
+      "username": fullname.split(' ').first,
       "email": email,
-      "phoneNumber": phoneNumber,
-      // "username": username,
       "password": password,
-      "profilePicture": profilepicture,
+
+      "confirmPassword": confirmPassword,
     };
   }
 
@@ -36,11 +39,17 @@ class AuthApiModel {
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {
     return AuthApiModel(
       userid: json['id'] as String?,
-      fullname: json['fullname'] as String,
+      fullname: () {
+        final name =
+            '${json['firstname'] ?? ''} ${json['lastname'] ?? ''}'.trim();
+        return name.isNotEmpty ? name : (json['username'] as String? ?? '');
+      }(),
       email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-     // username: json['username'] as String,
-      profilepicture: json['profilePicture'] as String?,
+      // phoneNumber: json['phoneNumber'] as String,
+      // username: json['username'] as String,
+      profilepicture: json['imageUrl'] as String?,
+      password: '',
+      role : json['role']as String?,
     );
   }
 
@@ -51,9 +60,10 @@ class AuthApiModel {
       fullName: fullname,
       email: email,
       // username: username,
-      phoneNumber: phoneNumber,
+      // phoneNumber: phoneNumber,
       password: password,
       profilePicture: profilepicture,
+      role: role,
       // batchId: '',
     );
   }
@@ -62,12 +72,14 @@ class AuthApiModel {
   factory AuthApiModel.fromEntity(AuthEntity entity) {
     return AuthApiModel(
       userid: entity.userId,
-      fullname: entity.fullName,
-      email: entity.email,
-      phoneNumber: entity.phoneNumber,
+      fullname: entity.fullName ?? '',
+      email: entity.email ?? '',
+      // phoneNumber: entity.phoneNumber,
       //username: entity.username,
       password: entity.password,
       profilepicture: entity.profilePicture,
+      confirmPassword: entity.confirmPassword,
+      role: entity.role,
     );
   }
 

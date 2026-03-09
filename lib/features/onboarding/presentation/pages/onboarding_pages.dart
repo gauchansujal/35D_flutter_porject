@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-// ignore: use_key_in_widget_constructors
 class OnboardingPages extends StatefulWidget {
   @override
-  // ignore: library_private_types_in_public_api
   _OnboardingPagesState createState() => _OnboardingPagesState();
 }
 
@@ -11,10 +9,13 @@ class _OnboardingPagesState extends State<OnboardingPages> {
   final PageController _controller = PageController();
   int _currentPage = 0;
 
-  final List<String> _texts = [
-    'Welcome to Bike Rental App',
-    'Book bikes easily',
-    'Track your rides anytime',
+  final List<Map<String, String>> _pages = [
+    {
+      'text': 'Welcome to Bike Rental App',
+      'image': 'assets/images/namasta.png',
+    },
+    {'text': 'Book bikes easily', 'image': 'assets/images/namasta.png'},
+    {'text': 'Track your rides anytime', 'image': 'assets/images/namasta.png'},
   ];
 
   @override
@@ -25,27 +26,43 @@ class _OnboardingPagesState extends State<OnboardingPages> {
           Expanded(
             child: PageView.builder(
               controller: _controller,
-              itemCount: _texts.length,
+              itemCount: _pages.length,
               onPageChanged: (index) {
                 setState(() {
                   _currentPage = index;
                 });
               },
               itemBuilder: (context, index) {
-                return Center(
-                  child: Text(
-                    _texts[index],
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ✅ Image above the text
+                    Image.asset(
+                      _pages[index]['image']!,
+                      height: 250,
+                      width: 250,
+                      fit: BoxFit.contain,
+                    ),
+                    SizedBox(height: 30),
+                    Text(
+                      _pages[index]['text']!,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 );
               },
             ),
           ),
+
+          // Dot indicators
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-              _texts.length,
+              _pages.length,
               (index) => Container(
                 margin: EdgeInsets.all(4),
                 width: _currentPage == index ? 12 : 8,
@@ -58,6 +75,8 @@ class _OnboardingPagesState extends State<OnboardingPages> {
             ),
           ),
           SizedBox(height: 20),
+
+          // Skip / Next buttons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
@@ -71,7 +90,7 @@ class _OnboardingPagesState extends State<OnboardingPages> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (_currentPage == _texts.length - 1) {
+                    if (_currentPage == _pages.length - 1) {
                       Navigator.pushReplacementNamed(context, '/login');
                     } else {
                       _controller.nextPage(
@@ -80,7 +99,9 @@ class _OnboardingPagesState extends State<OnboardingPages> {
                       );
                     }
                   },
-                  child: Text('Next'),
+                  child: Text(
+                    _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                  ),
                 ),
               ],
             ),

@@ -1,10 +1,54 @@
-import 'package:dartz/dartz.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/core/error/failures.dart';
 import 'package:flutter_application_1/features/auth/data/repositories/auth_repository.dart';
 import 'package:flutter_application_1/features/auth/domain/entities/auth_entity.dart';
-import 'package:flutter_application_1/features/auth/domain/repositories/auth_repositories.dart';
+import 'package:flutter_application_1/features/auth/presentation/pages/login_pages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+Future<bool> _userSangaPermissionLinuParcha(
+  BuildContext context,
+  Permission permission,
+) async {
+  final status = await permission.status;
+  if (status.isGranted) return true;
+  if (status.isDenied) {
+    final result = await permission.request();
+    return result.isGranted;
+  }
+  if (status.isPermanentlyDenied) {
+    _showPermissionDialog(context);
+    return false;
+  }
+  return false;
+}
+
+void _showPermissionDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder:
+        (context) => AlertDialog(
+          title: const Text('Permission Denied'),
+          content: const Text(
+            'yo features use gerna lai permission setting ma janu hola',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+  );
+}
 
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
@@ -17,27 +61,97 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
 
   bool _agreeToTerms = false;
   bool _isLoading = false;
+  File? _selectedImage;
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
+  Future<void> _cameraBataKhicha() async {
+    final hasPermission = await _userSangaPermissionLinuParcha(
+      context,
+      Permission.camera,
+    );
+    if (!hasPermission) return;
+
+    final XFile? photo = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+
+    if (photo != null) {
+      setState(() => _selectedImage = File(photo.path));
     }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final hasPermission = await _userSangaPermissionLinuParcha(
+      context,
+      Permission.photos,
+    );
+    if (!hasPermission) return;
+
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        setState(() => _selectedImage = File(image.path));
+      }
+    } catch (e) {
+      debugPrint('gallery error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to pick image from gallery')),
+        );
+      }
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take a photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _cameraBataKhicha();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromGallery();
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Future<void> _signup() async {
+    if (!_formKey.currentState!.validate()) return;
 
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,15 +166,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
-     setState(() => _isLoading = true);
+
+    setState(() => _isLoading = true);
 
     final entity = AuthEntity(
       fullName: _fullNameController.text.trim(),
       email: _emailController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text,
-      // batchId: '',
-      // username: '',
+      confirmPassword: _confirmPasswordController.text, // ✅ THIS LINE
+      profilePicture: _selectedImage?.path,
     );
 
     final repository = ref.read(authRepositoryProvider);
@@ -92,9 +206,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       },
     );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
@@ -105,7 +217,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed:
+              () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPages()),
+              ),
         ),
       ),
       backgroundColor: Colors.white,
@@ -118,18 +234,48 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.purple.shade100,
-                    borderRadius: BorderRadius.circular(16),
+
+                // profile picture picker
+                GestureDetector(
+                  onTap: _showImagePickerOptions,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.purple.shade100,
+                        backgroundImage:
+                            _selectedImage != null
+                                ? FileImage(_selectedImage!)
+                                : null,
+                        child:
+                            _selectedImage == null
+                                ? const Icon(
+                                  Icons.person_add,
+                                  size: 40,
+                                  color: Colors.purple,
+                                )
+                                : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.purple,
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.person_add,
-                    size: 40,
-                    color: Colors.purple,
-                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap to add profile picture',
+                  style: TextStyle(color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -179,8 +325,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value?.trim().isEmpty ?? true)
+                    if (value?.trim().isEmpty ?? true) {
                       return 'Email is required';
+                    }
                     if (!RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                     ).hasMatch(value!)) {
@@ -188,28 +335,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     }
                     return null;
                   },
-                ),
-                const SizedBox(height: 16),
-
-                // Phone Number
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    labelText: 'Phone Number',
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  validator:
-                      (value) =>
-                          value?.trim().isEmpty ?? true
-                              ? 'Phone number is required'
-                              : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -251,12 +376,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
+                  validator:
+                      (value) =>
+                          value != _passwordController.text
+                              ? 'Passwords do not match'
+                              : null,
                 ),
                 const SizedBox(height: 24),
 
